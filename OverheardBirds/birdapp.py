@@ -41,6 +41,8 @@ APP_DIR = Path(__file__).resolve().parent
 DATA_DIR = APP_DIR / "data"
 WEB_DIR = APP_DIR / "web"
 IMPORT_DIR = APP_DIR / "imports"
+CLIPS_DIR = DATA_DIR / "clips"
+CLIPS_PER_SPECIES = 3
 CONFIG_FILE = APP_DIR / "config.json"
 DB_FILE = DATA_DIR / "birds.db"
 if not DB_FILE.exists() and (DATA_DIR / "yard_birds.db").exists():
@@ -165,10 +167,19 @@ def init_db():
         conn.executescript(SCHEMA)
         # upgrade older databases in place
         for table, col, typ in [("detections", "wav", "TEXT"), ("detections", "conf", "TEXT"),
-                                ("detections", "raw", "TEXT"), ("species", "verdict", "TEXT")]:
+                                ("detections", "raw", "TEXT"), ("species", "verdict", "TEXT"),
+                                ("detections", "clip", "TEXT"), ("detections", "clip_start", "REAL")]:
             cols = {r[1] for r in conn.execute(f"PRAGMA table_info({table})")}
             if col not in cols:
                 conn.execute(f"ALTER TABLE {table} ADD COLUMN {col} {typ}")
+        # older versions kept the (serial-bearing) audio link inside raw
+        for rowid, raw in conn.execute("SELECT rowid, raw FROM detections WHERE raw LIKE '%\"wav\"%'").fetchall():
+            try:
+                d = json.loads(raw)
+                d.pop("wav", None)
+                conn.execute("UPDATE detections SET raw=? WHERE rowid=?", (json.dumps(d), rowid))
+            except Exception:
+                pass
 
 
 def meta_get(key, default=None):
@@ -348,6 +359,7 @@ def run_sync(full=False):
         log(f"Connected to {meta_get('box_name')} ({serial})")
 
         sync_recent_detections(serial)
+        save_clips()
         sync_daily_history(serial, full)
         import_csv_files()
         backfill_daily_from_detections()
@@ -417,7 +429,8 @@ def sync_recent_detections(serial):
                 "INSERT OR IGNORE INTO detections(ts,day,hour,species,scientific,score,wav,conf,raw) "
                 "VALUES(?,?,?,?,?,?,?,?,?)",
                 (ts_local, local.date().isoformat(), local.hour, name, sci, score, wav,
-                 None if conf is None else str(conf), json.dumps(e)[:2000]),
+                 None if conf is None else str(conf),
+                 json.dumps({k: v for k, v in e.items() if k not in ("wav", "wavUrl", "audio", "audioUrl", "url")})[:2000]),
             )
             if not cur.rowcount and wav:
                 conn.execute("UPDATE detections SET wav=? WHERE ts=? AND species=? AND wav IS NULL",
@@ -426,6 +439,77 @@ def sync_recent_detections(serial):
             ensure_species(conn, name, sci)
     meta_set("last_detection_sync", datetime.now().isoformat(timespec="seconds"))
     log(f"Recent detections: {len(rows)} received, {added} new")
+
+
+def save_clips():
+    """Haikubox audio links expire after an hour, so keep our own short copy of the
+    newest few recordings for each bird (trimmed to the moment of the call if ffmpeg exists)."""
+    import hashlib
+    import shutil
+    import subprocess
+    import tempfile
+    CLIPS_DIR.mkdir(parents=True, exist_ok=True)
+    ff = shutil.which("ffmpeg")
+    with db() as conn:
+        todo = conn.execute(
+            "SELECT species, ts, wav, raw FROM ("
+            " SELECT *, ROW_NUMBER() OVER (PARTITION BY species ORDER BY ts DESC) rn FROM detections"
+            " WHERE clip IS NOT NULL OR wav IS NOT NULL) WHERE rn <= ? AND clip IS NULL AND wav IS NOT NULL",
+            (CLIPS_PER_SPECIES,)).fetchall()
+    if todo:
+        SYNC.update(phase="clips", message="Saving recordings...", done=0, total=len(todo))
+    saved = 0
+    for i, r in enumerate(todo):
+        SYNC.update(done=i)
+        try:
+            offset = float((json.loads(r["raw"] or "{}")).get("offset") or 0)
+        except (ValueError, TypeError):
+            offset = 0.0
+        key = hashlib.sha1(f"{r['species']}|{r['ts']}".encode()).hexdigest()[:16]
+        ext = Path(urllib.parse.urlparse(r["wav"]).path).suffix.lower() or ".wav"
+        try:
+            req = urllib.request.Request(r["wav"], headers={"User-Agent": USER_AGENT})
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                audio = resp.read()
+        except Exception:
+            continue
+        name, start = None, 0.0
+        if ff:
+            with tempfile.TemporaryDirectory() as td:
+                src = Path(td) / f"in{ext}"
+                src.write_bytes(audio)
+                out = CLIPS_DIR / f"{key}.mp3"
+                cmd = [ff, "-y", "-loglevel", "error", "-ss", f"{max(0.0, offset - 1.5):.2f}", "-i", str(src),
+                       "-t", "8", "-ac", "1", "-b:a", "48k", str(out)]
+                try:
+                    subprocess.run(cmd, check=True, timeout=60)
+                    if out.exists() and out.stat().st_size > 1000:
+                        name = out.name
+                except Exception:
+                    out.unlink(missing_ok=True)
+        if not name:
+            name = f"{key}{ext}"
+            (CLIPS_DIR / name).write_bytes(audio)
+            start = max(0.0, offset - 1.5)
+        with DB_LOCK, db() as conn:
+            conn.execute("UPDATE detections SET clip=?, clip_start=? WHERE species=? AND ts=?",
+                         (name, start, r["species"], r["ts"]))
+        saved += 1
+    with DB_LOCK, db() as conn:
+        # links are only good for an hour - forget them once we've had our chance
+        conn.execute("UPDATE detections SET wav=NULL WHERE wav IS NOT NULL")
+        old = conn.execute(
+            "SELECT species, ts, clip FROM (SELECT *, ROW_NUMBER() OVER (PARTITION BY species ORDER BY ts DESC) rn"
+            " FROM detections WHERE clip IS NOT NULL) WHERE rn > ?", (CLIPS_PER_SPECIES,)).fetchall()
+        for r in old:
+            (CLIPS_DIR / r["clip"]).unlink(missing_ok=True)
+            conn.execute("UPDATE detections SET clip=NULL WHERE species=? AND ts=?", (r["species"], r["ts"]))
+        keep = {r["clip"] for r in conn.execute("SELECT clip FROM detections WHERE clip IS NOT NULL")}
+    for f in CLIPS_DIR.iterdir():
+        if f.is_file() and f.name not in keep:
+            f.unlink(missing_ok=True)
+    if todo:
+        log(f"Recordings: saved {saved} new clip(s){'' if ff else ' (ffmpeg not found, kept full files)'}")
 
 
 def parse_daily(payload):
@@ -793,11 +877,10 @@ def build_payload():
         reviews = {(r["species"], r["ts"]): r["verdict"] for r in conn.execute("SELECT * FROM reviews")}
         recordings = {}
         for r in conn.execute(
-                "SELECT species, ts, wav, conf, score FROM ("
-                " SELECT *, ROW_NUMBER() OVER (PARTITION BY species ORDER BY ts DESC) rn FROM detections"
-                " WHERE wav IS NOT NULL) WHERE rn <= 15"):
+                "SELECT species, ts, clip, clip_start, conf FROM detections WHERE clip IS NOT NULL ORDER BY ts DESC"):
             recordings.setdefault(r["species"], []).append(
-                {"ts": r["ts"], "wav": r["wav"], "conf": r["conf"], "verdict": reviews.get((r["species"], r["ts"]))})
+                {"ts": r["ts"], "wav": "clips/" + r["clip"], "start": r["clip_start"] or 0,
+                 "conf": r["conf"], "verdict": reviews.get((r["species"], r["ts"]))})
         conf_stats = {}
         for r in conn.execute("SELECT species, conf, COUNT(*) c FROM detections WHERE conf IS NOT NULL "
                               "GROUP BY species, conf"):
@@ -888,7 +971,7 @@ def phone_urls():
     return {k: [f"http://{ip}:{SERVER_PORT}/" for ip in v] for k, v in a.items()}
 
 
-STATIC_TYPES = {".png": "image/png", ".svg": "image/svg+xml", ".webmanifest": "application/manifest+json",
+STATIC_TYPES = {".mp3": "audio/mpeg", ".flac": "audio/flac", ".wav": "audio/wav", ".png": "image/png", ".svg": "image/svg+xml", ".webmanifest": "application/manifest+json",
                 ".js": "text/javascript", ".css": "text/css", ".ico": "image/x-icon"}
 
 
@@ -925,6 +1008,11 @@ class Handler(BaseHTTPRequestHandler):
                     and static.is_file()):
                 return self.send(200, static.read_bytes(), STATIC_TYPES[static.suffix],
                                  {"Cache-Control": "max-age=86400"})
+            if path.startswith("/clips/") and path.count("/") == 2:
+                clip = (CLIPS_DIR / path.split("/")[-1]).resolve()
+                if clip.parent == CLIPS_DIR.resolve() and clip.is_file() and clip.suffix in STATIC_TYPES:
+                    return self.send(200, clip.read_bytes(), STATIC_TYPES[clip.suffix],
+                                     {"Cache-Control": "max-age=604800"})
             if path == "/api/ping":
                 return self.send(200, {"app": "overheardbirds"})
             if path == "/api/data":
@@ -1000,6 +1088,8 @@ def build_site(out_dir):
     for f in WEB_DIR.iterdir():
         if f.is_file() and f.name != "index.html":
             shutil.copy2(f, out / f.name)
+    if CLIPS_DIR.exists():
+        shutil.copytree(CLIPS_DIR, out / "clips", dirs_exist_ok=True)
     html = (WEB_DIR / "index.html").read_text(encoding="utf-8")
     html = html.replace("</head>", "<script>window.YB_STATIC = true;</script>\n</head>", 1)
     (out / "index.html").write_text(html, encoding="utf-8")

@@ -32,11 +32,14 @@ jobs:
           mkdir -p OverheardBirds/data
           if git ls-remote --exit-code --heads origin data >/dev/null 2>&1; then
             git fetch --depth=1 origin data
-            git show origin/data:birds.db > OverheardBirds/data/birds.db
-            echo "Restored database ($(du -h OverheardBirds/data/birds.db | cut -f1))"
+            git archive origin/data | tar -x -C OverheardBirds/data
+            echo "Restored database and recordings ($(du -sh OverheardBirds/data | cut -f1))"
           else
             echo "No saved database yet - first run downloads full history"
           fi
+
+      - name: Make sure ffmpeg is available (trims recordings)
+        run: which ffmpeg || (sudo apt-get update -q && sudo apt-get install -y -q ffmpeg)
 
       - name: Sync from Haikubox and build the website
         env:
@@ -51,7 +54,8 @@ jobs:
           git init -q -b data
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add birds.db
+          rm -f api_samples.json
+          git add -A
           git commit -q -m "Database $(date -u +%Y-%m-%dT%H:%MZ)"
           git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" data
 

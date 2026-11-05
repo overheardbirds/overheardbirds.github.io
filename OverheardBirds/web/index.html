@@ -738,13 +738,13 @@ function renderCompare(){
 /* ---------- recordings & verdicts ---------- */
 function recHTML(b, limit=6){
   const recs = (DATA.recordings?.[b.name] || []).slice(0, limit);
-  if (!recs.length) return `<div class="empty">No recordings saved yet. Recordings are collected while Overheard Birds is running (the Haikubox only shares the last day of clips). You can also listen in the Haikubox app.</div>`;
+  if (!recs.length) return `<div class="empty">No recordings saved yet. The newest 3 recordings of each bird are kept from now on (Haikubox only shares each clip for a short time). Older ones can be played in the Haikubox app.</div>`;
   return `<div class="recs">${recs.map(r => {
     const L = confLevel(r.conf);
     return `<div class="rec" data-ts="${esc(r.ts)}">
       <span>${fmtDay(r.ts.slice(0,10))}, ${fmtTime(r.ts)}</span>
-      <span class="cf" title="Haikubox confidence">${L || '?'}</span>
-      <audio controls preload="none" src="${esc(r.wav)}" onerror="this.outerHTML='<span class=gone>Recording no longer available</span>'"></audio>
+      <span class="cf" title="Haikubox confidence" ${L ? '' : 'style="visibility:hidden"'}>${L || ''}</span>
+      <audio controls preload="none" src="${esc(r.wav)}${r.start ? '#t=' + r.start : ''}" onerror="this.outerHTML='<span class=gone>Recording no longer available</span>'"></audio>
       <span class="vb"><button class="ok ${r.verdict==='correct'?'on':''}" title="Sounds right" data-v="correct">&#10003;</button><button class="bad ${r.verdict==='wrong'?'on':''}" title="Not this bird" data-v="wrong">&#10007;</button></span>
     </div>`;}).join('')}</div>`;
 }
