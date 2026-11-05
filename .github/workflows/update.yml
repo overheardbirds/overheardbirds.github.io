@@ -1,0 +1,72 @@
+name: Update Yard Birds
+
+on:
+  schedule:
+    - cron: "17 * * * *"   # every hour
+  workflow_dispatch:        # "Run workflow" button
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: yard-birds
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Restore saved database
+        run: |
+          mkdir -p YardBirds/data
+          if git ls-remote --exit-code --heads origin data >/dev/null 2>&1; then
+            git fetch --depth=1 origin data
+            git show origin/data:yard_birds.db > YardBirds/data/yard_birds.db
+            echo "Restored database ($(du -h YardBirds/data/yard_birds.db | cut -f1))"
+          else
+            echo "No saved database yet - first run downloads full history"
+          fi
+
+      - name: Sync from Haikubox and build the website
+        env:
+          HAIKUBOX_SERIAL: ${{ secrets.HAIKUBOX_SERIAL }}
+          YB_LATITUDE: ${{ secrets.YB_LATITUDE }}
+          YB_LONGITUDE: ${{ secrets.YB_LONGITUDE }}
+        run: python YardBirds/birdapp.py --build site
+
+      - name: Save database to the "data" branch
+        run: |
+          cd YardBirds/data
+          git init -q -b data
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add yard_birds.db
+          git commit -q -m "Database $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" data
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

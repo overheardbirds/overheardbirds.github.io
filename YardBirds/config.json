@@ -1,0 +1,11 @@
+{
+  "serial": "",
+  "years_of_history": 3,
+  "port": 8765,
+  "auto_sync_minutes": 60,
+  "open_browser": true,
+  "latitude": null,
+  "longitude": null,
+  "nearby_radius_km": 25,
+  "phone_access": true
+}

@@ -1,0 +1,1072 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Yard Birds</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<meta name="theme-color" content="#2f6b4f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Yard Birds">
+<script src="qrcode.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,650&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f5f2ea; --paper:#fffdf8; --ink:#1d2721; --ink2:#55605a; --ink3:#8a928d;
+  --line:#e4dfd3; --accent:#2f6b4f; --accent-soft:#e3efe7; --ochre:#b9822b;
+  --heat0:#efebe1; --heat1:#cfe3d4; --heat2:#9cc8a8; --heat3:#5fa47a; --heat4:#2f6b4f; --heat5:#173d2c;
+  --yr:#2f6b4f; --su:#b9822b; --wi:#3b6ea5; --mi:#7a5aa6; --ra:#8a928d;
+  --shadow:0 1px 2px rgba(30,40,30,.06),0 4px 14px rgba(30,40,30,.06);
+  --radius:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#141915; --paper:#1c231e; --ink:#e9ede8; --ink2:#a9b3ac; --ink3:#77827a;
+    --line:#2c352f; --accent:#7cc39a; --accent-soft:#22362a; --ochre:#e0ad5a;
+    --heat0:#232b25; --heat1:#244232; --heat2:#2f6a48; --heat3:#46976a; --heat4:#79c597; --heat5:#b8ecc9;
+    --yr:#7cc39a; --su:#e0ad5a; --wi:#7fb0e6; --mi:#b79ae0; --ra:#8b958e;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 4px 14px rgba(0,0,0,.25);
+  }
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;font-weight:650;letter-spacing:-.01em;margin:0}
+a{color:var(--accent)}
+button,select,input{font:inherit;color:inherit}
+.wrap{max-width:1240px;margin:0 auto;padding:0 20px}
+
+/* header */
+header{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.hrow{display:flex;align-items:center;gap:18px;height:64px}
+.brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink)}
+.brand h1{font-size:22px}
+.brand small{display:block;font:500 12px Inter,sans-serif;color:var(--ink3);margin-top:-2px}
+nav{display:flex;gap:4px;margin-left:12px}
+nav a{white-space:nowrap;padding:8px 14px;border-radius:999px;text-decoration:none;color:var(--ink2);font-weight:500}
+nav a:hover{background:var(--paper)}
+nav a.on{background:var(--ink);color:var(--bg)}
+.hright{margin-left:auto;display:flex;align-items:center;gap:10px}
+.pill{font-size:13px;color:var(--ink2);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.dot.busy{background:var(--ochre);animation:pulse 1s infinite}
+.dot.err{background:#c0392b}
+@keyframes pulse{50%{opacity:.3}}
+.btn{border:1px solid var(--line);background:var(--paper);padding:7px 14px;border-radius:999px;cursor:pointer;font-weight:500;font-size:14px;text-decoration:none;color:var(--ink);display:inline-flex;align-items:center;gap:6px}
+.btn:hover{border-color:var(--ink3)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+@media (prefers-color-scheme: dark){.btn.primary{color:#10170f}}
+.btn:disabled{opacity:.5;cursor:default}
+
+.progress{height:3px;background:transparent;position:relative;overflow:hidden}
+.progress i{position:absolute;left:0;top:0;bottom:0;background:var(--ochre);transition:width .4s}
+.banner{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:12px 16px;margin:16px 0 0;display:flex;gap:12px;align-items:center;font-size:14px;color:var(--ink2)}
+.banner.err{border-color:#d9a19a;color:#9b3328}
+
+main{padding:28px 0 80px}
+.view{display:none}.view.on{display:block}
+.sec-h{display:flex;align-items:baseline;gap:12px;margin:34px 0 14px}
+.sec-h h2{font-size:22px}
+.sec-h .sub{color:var(--ink3);font-size:14px}
+.sec-h .tools{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+
+/* stat tiles */
+.hello{display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap}
+.hello h2{font-size:34px;line-height:1.1}
+.hello p{margin:6px 0 0;color:var(--ink2)}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:22px}
+.tile{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+.tile .n{font-family:Fraunces,Georgia,serif;font-size:34px;font-weight:650;line-height:1.1}
+.tile .l{color:var(--ink2);font-size:13px;margin-top:2px}
+.tile .d{font-size:12px;color:var(--ink3);margin-top:6px}
+
+/* bird cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s;display:flex;flex-direction:column}
+.card:hover{transform:translateY(-2px);box-shadow:var(--shadow)}
+.ph{aspect-ratio:4/3;background:var(--heat0) center/cover no-repeat;position:relative}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph .badge{position:absolute;left:10px;top:10px}
+.ph .cnt{position:absolute;right:10px;bottom:10px;background:rgba(20,25,20,.72);color:#fff;font-size:12px;font-weight:600;padding:3px 9px;border-radius:999px}
+.card .body{padding:12px 14px 14px;display:flex;flex-direction:column;gap:2px;flex:1}
+.card .nm{font-weight:600;font-size:15.5px;line-height:1.25}
+.card .sci{font-style:italic;color:var(--ink3);font-size:13px}
+.card .meta{color:var(--ink2);font-size:13px;margin-top:6px}
+.spark{display:flex;align-items:flex-end;gap:2px;height:22px;margin-top:8px}
+.spark i{flex:1;background:var(--heat2);border-radius:2px 2px 0 0;min-height:2px}
+.spark i.z{background:var(--heat0)}
+.badge{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.02em;padding:3px 8px;border-radius:999px;background:var(--paper);color:var(--ink2);border:1px solid var(--line)}
+.badge.yr{color:var(--yr)}.badge.su{color:var(--su)}.badge.wi{color:var(--wi)}.badge.mi{color:var(--mi)}.badge.ra{color:var(--ra)}
+.badge.new{background:var(--ochre);color:#fff;border-color:var(--ochre)}
+
+.two{display:grid;grid-template-columns:2fr 1fr;gap:24px}
+.panel{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
+.panel h3{font-size:17px;margin-bottom:10px}
+.mini{display:flex;align-items:center;gap:10px;padding:7px 0;border-top:1px solid var(--line);cursor:pointer}
+.mini:first-of-type{border-top:0}
+.mini img,.mini .noimg{width:40px;height:40px;border-radius:10px;object-fit:cover;background:var(--heat0);flex:none}
+.mini .t{font-weight:600;font-size:14px;line-height:1.2}
+.mini .s{font-size:12.5px;color:var(--ink3)}
+.mini .r{margin-left:auto;font-size:12.5px;color:var(--ink2);text-align:right;white-space:nowrap}
+.empty{color:var(--ink3);font-size:14px;padding:6px 0}
+
+/* controls */
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
+.search{flex:1;min-width:200px;max-width:360px;border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:9px 16px}
+select{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:8px 12px}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:6px 12px;font-size:13px;cursor:pointer;color:var(--ink2)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:var(--bg)}
+label.tog{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink2);cursor:pointer}
+
+/* calendar */
+.cal{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:10px 16px 14px;overflow-x:auto}
+.cal-row{display:grid;grid-template-columns:230px 1fr 64px;align-items:center;gap:12px;min-width:860px;padding:4px 0;cursor:pointer;border-radius:8px}
+.cal-row:hover{background:var(--accent-soft)}
+.cal-row.head{cursor:default;position:sticky;top:0;background:var(--paper);font-size:12px;color:var(--ink3);padding:8px 0}
+.cal-row.head:hover{background:var(--paper)}
+.cal-name{display:flex;align-items:center;gap:9px;min-width:0}
+.cal-name img,.cal-name .noimg{width:30px;height:30px;border-radius:8px;object-fit:cover;flex:none;background:var(--heat0)}
+.cal-name span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px;font-weight:500}
+.strip{display:grid;grid-template-columns:repeat(53,1fr);gap:2px;position:relative}
+.strip i{height:16px;border-radius:3px;background:var(--heat0)}
+.strip.cmp i{height:7px;opacity:.85}
+.strip .today{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ochre);border-radius:2px}
+.months{display:grid;grid-template-columns:repeat(12,1fr)}
+.cal-n{text-align:right;font-size:12.5px;color:var(--ink3)}
+.legend{display:flex;align-items:center;gap:4px;font-size:12px;color:var(--ink3)}
+.legend i{width:14px;height:12px;border-radius:3px;display:inline-block}
+
+/* charts */
+.chart{width:100%;display:block}
+.chart text{fill:var(--ink3);font-size:11px;font-family:Inter,sans-serif}
+.chart .grid line{stroke:var(--line)}
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.bars-h .row{display:grid;grid-template-columns:170px 1fr 54px;gap:10px;align-items:center;padding:4px 0;cursor:pointer;font-size:14px}
+.bars-h .bar{height:14px;border-radius:4px;background:var(--heat3)}
+.bars-h .v{color:var(--ink3);font-size:12.5px;text-align:right}
+
+/* modal */
+.ov{position:fixed;inset:0;background:rgba(10,15,12,.5);display:none;z-index:50;align-items:flex-start;justify-content:center;padding:40px 16px;overflow-y:auto}
+.ov.on{display:flex}
+.modal{background:var(--paper);border-radius:18px;max-width:980px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;position:relative}
+.x{position:absolute;right:14px;top:14px;width:36px;height:36px;border-radius:50%;border:0;background:rgba(20,25,20,.6);color:#fff;font-size:20px;cursor:pointer;z-index:2}
+.mtop{display:grid;grid-template-columns:1.1fr 1fr}
+.gal{background:#111;position:relative}
+.gal .big{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+.gal .thumbs{display:flex;gap:6px;padding:8px;background:#111}
+.gal .thumbs img{width:56px;height:42px;object-fit:cover;border-radius:6px;cursor:pointer;opacity:.6;border:2px solid transparent}
+.gal .thumbs img.on{opacity:1;border-color:#fff}
+.credit{font-size:11px;color:#aaa;padding:0 10px 8px;background:#111}
+.minfo{padding:24px 26px}
+.minfo h2{font-size:30px;line-height:1.1}
+.minfo .sci{font-style:italic;color:var(--ink3);margin:4px 0 12px}
+.kv{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.kv div{background:var(--bg);border-radius:10px;padding:10px 12px}
+.kv b{display:block;font-family:Fraunces,Georgia,serif;font-size:20px}
+.kv span{font-size:12px;color:var(--ink2)}
+.summary{font-size:14px;color:var(--ink2);max-height:7.5em;overflow:hidden;position:relative}
+.summary.open{max-height:none}
+.links{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.mbody{padding:6px 26px 26px}
+.mbody h3{font-size:16px;margin:22px 0 10px}
+.yrow{display:grid;grid-template-columns:52px 1fr 190px;gap:10px;align-items:center;margin:6px 0;font-size:13px}
+.yrow .s2{color:var(--ink3);font-size:12px}
+
+/* trust */
+.tr{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:600}
+.tr::before{content:"";width:8px;height:8px;border-radius:50%;background:currentColor}
+.t4{color:var(--accent)}.t3{color:var(--yr)}.t2{color:var(--ink2)}.t1{color:var(--ochre)}.t0{color:#c0392b}
+.trust{background:var(--bg);border-radius:12px;padding:12px 14px;margin:14px 0 0}
+.trust .lvl{font-family:Fraunces,Georgia,serif;font-size:18px;font-weight:650}
+.trust ul{margin:6px 0 0;padding-left:18px;font-size:13.5px;color:var(--ink2)}
+.trust .acts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.btn.yes.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.no.on{background:#c0392b;border-color:#c0392b;color:#fff}
+.recs{display:flex;flex-direction:column;gap:6px}
+.rec{display:grid;grid-template-columns:130px 34px 1fr auto;gap:10px;align-items:center;background:var(--bg);border-radius:10px;padding:6px 10px;font-size:13px}
+.rec audio{width:100%;height:32px}
+.rec .cf{font-size:11px;font-weight:700;text-align:center;border-radius:6px;padding:2px 0;background:var(--paper);border:1px solid var(--line)}
+.rec .vb{display:flex;gap:4px}
+.rec .vb button{border:1px solid var(--line);background:var(--paper);border-radius:8px;width:32px;height:30px;cursor:pointer;font-size:14px}
+.rec .vb button.on.ok{background:var(--accent);color:#fff;border-color:var(--accent)}
+.rec .vb button.on.bad{background:#c0392b;color:#fff;border-color:#c0392b}
+.rec .gone{color:var(--ink3);font-size:12px}
+.rv{display:grid;grid-template-columns:120px 1fr;gap:18px;background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:14px}
+.rv .ph{border-radius:10px;overflow:hidden;cursor:pointer}
+.rv h3{font-size:19px}
+.rv .why{margin:4px 0 8px;padding-left:18px;font-size:13.5px;color:var(--ink2)}
+.navc{background:var(--ochre);color:#fff;font-size:11px;font-weight:700;border-radius:999px;padding:1px 7px;margin-left:5px}
+.explain{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;margin-bottom:20px;font-size:14px;color:var(--ink2)}
+.explain b{color:var(--ink)}
+@media (max-width:700px){.rec{grid-template-columns:1fr auto;}.rec audio{grid-column:1/-1}.rv{grid-template-columns:80px 1fr}}
+
+.qrbox{display:grid;grid-template-columns:200px 1fr;gap:22px;align-items:start}
+.qrbox .qr{background:#fff;border-radius:12px;padding:10px;width:200px;height:200px}
+.qrbox .qr img,.qrbox .qr svg{width:100%;height:100%}
+.url{font:600 18px ui-monospace,Consolas,monospace;background:var(--bg);border-radius:8px;padding:6px 10px;display:inline-block;margin:4px 0;word-break:break-all}
+.steps{margin:6px 0 0;padding-left:20px;font-size:14px;color:var(--ink2)}
+.steps li{margin:3px 0}
+@media (max-width:700px){.qrbox{grid-template-columns:1fr}}
+
+.foot{color:var(--ink3);font-size:12.5px;margin-top:40px;text-align:center}
+
+@media (max-width:900px){
+  .tiles{grid-template-columns:repeat(2,1fr)}
+  .two,.cgrid,.mtop{grid-template-columns:1fr}
+  nav{margin-left:0}
+  .hrow{flex-wrap:wrap;height:auto;padding:10px 0;gap:10px}
+  .hright{margin-left:0;width:100%}
+  .cal-row{grid-template-columns:150px 1fr 50px}
+}
+@media (max-width:560px){
+  .wrap{padding:0 16px}
+  nav{overflow-x:auto;width:100%}
+  .hello h2{font-size:26px}
+  .sec-h .sub{display:none}
+  .sec-h{flex-wrap:wrap}
+  .yrow{grid-template-columns:44px 1fr}
+  .yrow .s2{grid-column:2}
+  .mbody .months{margin-right:0!important;margin-left:54px!important}
+  .grid{grid-template-columns:repeat(2,1fr);gap:10px}
+  .bars-h .row{grid-template-columns:110px 1fr 44px}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap hrow">
+    <a class="brand" href="#today">
+      <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="var(--accent)"/><path d="M17 38c4-9 12-15 21-14 3-5 9-6 12-3l-5 2c1 7-3 15-12 18-6 2-12 1-16-3z" fill="var(--paper)"/><circle cx="43" cy="24" r="1.8" fill="var(--accent)"/><path d="M28 43l-3 7M33 42l-1 8" stroke="var(--paper)" stroke-width="2.4" stroke-linecap="round"/></svg>
+      <div><h1>Yard Birds</h1><small id="boxName">Haikubox</small></div>
+    </a>
+    <nav id="nav">
+      <a href="#today" data-v="today">Today</a>
+      <a href="#guide" data-v="guide">Field Guide</a>
+      <a href="#calendar" data-v="calendar">Calendar</a>
+      <a href="#trends" data-v="trends">Trends</a>
+      <a href="#review" data-v="review">Review<span class="navc" id="revCount" hidden></span></a>
+    </nav>
+    <div class="hright">
+      <span class="pill"><span class="dot" id="syncDot"></span><span id="syncText">Loading...</span></span>
+      <button class="btn" id="syncBtn" title="Pull the newest detections from your Haikubox">&#8635; Sync now</button>
+      <a class="btn" id="csvBtn" href="/export.csv" title="Download every daily count as a spreadsheet">&#8681; CSV</a>
+      <button class="btn" id="phoneBtn" hidden title="Open Yard Birds on your phone">&#128241; Phone</button>
+    </div>
+  </div>
+  <div class="progress"><i id="prog" style="width:0"></i></div>
+</header>
+
+<div class="wrap">
+  <div id="banner"></div>
+  <main>
+    <!-- TODAY -->
+    <section class="view" id="v-today">
+      <div class="hello">
+        <div>
+          <h2 id="hello">Good morning</h2>
+          <p id="helloSub"></p>
+        </div>
+      </div>
+      <div class="tiles" id="tiles"></div>
+
+      <div class="two">
+        <div>
+          <div class="sec-h"><h2 id="todayTitle">Heard today</h2><span class="sub" id="todaySub"></span></div>
+          <div class="grid" id="todayGrid"></div>
+        </div>
+        <div>
+          <div class="sec-h"><h2>Yard notes</h2></div>
+          <div class="panel" style="margin-bottom:16px">
+            <h3>New arrivals</h3>
+            <div class="sub" style="font-size:12.5px;color:var(--ink3);margin:-6px 0 6px">First heard this year, in the last 3 weeks</div>
+            <div id="arrivals"></div>
+          </div>
+          <div class="panel" style="margin-bottom:16px">
+            <h3>Gone quiet</h3>
+            <div class="sub" style="font-size:12.5px;color:var(--ink3);margin:-6px 0 6px">Regulars not heard for 10+ days</div>
+            <div id="quiet"></div>
+          </div>
+          <div class="panel">
+            <h3>When they sing</h3>
+            <div class="sub" style="font-size:12.5px;color:var(--ink3);margin:-6px 0 6px">Detections by hour, last 3 days</div>
+            <div id="hourChart"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FIELD GUIDE -->
+    <section class="view" id="v-guide">
+      <div class="sec-h" style="margin-top:0"><h2>Field Guide</h2><span class="sub" id="guideSub"></span></div>
+      <div class="controls">
+        <input class="search" id="gSearch" placeholder="Search birds...">
+        <select id="gSort">
+          <option value="days">Most often heard</option>
+          <option value="recent">Recently heard</option>
+          <option value="az">A to Z</option>
+          <option value="newest">Newest to the yard</option>
+        </select>
+        <select id="gYear"></select>
+        <div class="chips" id="gChips"></div>
+        <label class="tog"><input type="checkbox" id="gSure"> Hide unconfirmed</label>
+        <label class="tog"><input type="checkbox" id="gHidden"> Show hidden</label>
+      </div>
+      <div class="grid" id="guideGrid"></div>
+    </section>
+
+    <!-- CALENDAR -->
+    <section class="view" id="v-calendar">
+      <div class="sec-h" style="margin-top:0"><h2>Bird Calendar</h2><span class="sub">Each square is one week. Darker = more detections.</span></div>
+      <div class="controls">
+        <select id="cYear"></select>
+        <select id="cCompare"><option value="">Compare with...</option></select>
+        <select id="cMin">
+          <option value="1">Heard 1+ days</option>
+          <option value="3" selected>Heard 3+ days</option>
+          <option value="7">Heard 7+ days</option>
+          <option value="20">Heard 20+ days</option>
+        </select>
+        <select id="cSort">
+          <option value="arrival">Sort by arrival</option>
+          <option value="days">Sort by days heard</option>
+          <option value="az">Sort A to Z</option>
+        </select>
+        <input class="search" id="cSearch" placeholder="Search birds...">
+        <div class="legend" style="margin-left:auto">Less <i style="background:var(--heat0)"></i><i style="background:var(--heat1)"></i><i style="background:var(--heat2)"></i><i style="background:var(--heat3)"></i><i style="background:var(--heat4)"></i><i style="background:var(--heat5)"></i> More</div>
+      </div>
+      <div class="cal" id="cal"></div>
+    </section>
+
+    <!-- TRENDS -->
+    <section class="view" id="v-trends">
+      <div class="sec-h" style="margin-top:0"><h2>Trends</h2><span class="sub">How your yard changes through the seasons and years</span></div>
+      <div class="cgrid">
+        <div class="panel"><h3>Species heard each month</h3><div id="tMonthly"></div></div>
+        <div class="panel"><h3>Daily activity, last 12 months</h3><div id="tDaily"></div></div>
+      </div>
+      <div class="cgrid" style="margin-top:20px">
+        <div class="panel"><h3 id="tTopTitle">Most heard this year</h3><div class="bars-h" id="tTop"></div></div>
+        <div class="panel">
+          <h3>Year vs. year</h3>
+          <div class="controls" style="margin:0 0 8px"><select id="tA"></select><span style="color:var(--ink3)">vs</span><select id="tB"></select></div>
+          <div id="tCompare"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REVIEW -->
+    <section class="view" id="v-review">
+      <div class="sec-h" style="margin-top:0"><h2>Did it hear right?</h2><span class="sub" id="revSub"></span></div>
+      <div class="explain">
+        Your Haikubox identifies birds by sound using an AI model (based on Cornell's BirdNET). It's good, but it can be fooled by
+        similar calls, mimics like jays and starlings, squirrels, dogs, or sirens. Birds below were heard <b>only once or twice</b>,
+        on a single day, or are <b>rarely reported near you</b>. Play the recording, compare with the
+        <b>songs</b> link, then tell it <b>Yes, it's here</b> or <b>No, it's wrong</b>. "Wrong" hides the bird everywhere (you can undo it).
+        <div id="locNote" style="margin-top:8px"></div>
+        <div id="deviceNote" style="margin-top:8px"></div>
+      </div>
+      <div id="reviewList"></div>
+      <div class="sec-h"><h2>Hidden as wrong</h2><span class="sub">Tap to undo</span></div>
+      <div id="wrongList"></div>
+    </section>
+
+    <div class="foot">Data from your Haikubox &middot; Photos and descriptions from iNaturalist contributors &amp; Wikipedia &middot; Stored on this computer in YardBirds/data/yard_birds.db</div>
+  </main>
+</div>
+
+<div class="ov" id="ov"><div class="modal" id="modal"></div></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const el = (tag, attrs = {}, html = '') => { const e = document.createElement(tag); Object.assign(e, attrs); if (html) e.innerHTML = html; return e; };
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const NOIMG = `<svg viewBox="0 0 64 48" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"><path d="M18 30c3-7 9-11 16-10 2-4 7-5 9-2l-4 1c1 5-2 11-9 13-5 2-9 1-12-2z" fill="var(--ink3)" opacity=".35"/></svg>`;
+
+let DATA = null, B = {}, LIST = [], YEARS = [], TODAY = null, CUR_YEAR = null;
+let guideFilter = 'all';
+
+/* ---------- date helpers ---------- */
+const parseDay = s => { const [y,m,d] = s.split('-').map(Number); return new Date(y, m-1, d); };
+const dayStr = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const addDays = (d, n) => { const x = new Date(d); x.setDate(x.getDate()+n); return x; };
+const diffDays = (a, b) => Math.round((parseDay(a) - parseDay(b)) / 864e5);
+const doy = d => Math.floor((d - new Date(d.getFullYear(),0,1)) / 864e5);
+const weekIdx = s => Math.min(52, Math.floor(doy(parseDay(s)) / 7));
+const fmtDay = s => { const d = parseDay(s); return `${MON[d.getMonth()]} ${d.getDate()}`; };
+const fmtDayY = s => { const d = parseDay(s); return `${MON[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`; };
+const fmtTime = ts => new Date(ts).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+function ago(ts){
+  const m = (Date.now() - new Date(ts)) / 6e4;
+  if (m < 2) return 'just now';
+  if (m < 60) return `${Math.round(m)} min ago`;
+  if (m < 60*24) return `${Math.round(m/60)} hr ago`;
+  return `${Math.round(m/1440)} days ago`;
+}
+const num = n => n.toLocaleString();
+
+/* ---------- derive stats ---------- */
+function seasonOf(b, spanDays){
+  if (b.nDays < 4) return ['Rare visitor','ra'];
+  if (spanDays < 300){
+    const recentShare = b.nDays / Math.max(spanDays, 1);
+    return recentShare >= 0.3 ? ['Regular','yr'] : ['Occasional','ra'];
+  }
+  if (b.nDays < 10) return ['Rare visitor','ra'];
+  const monthsWith = b.monthDays.filter(x => x >= 2).length;
+  if (monthsWith >= 9) return ['Year-round','yr'];
+  const tot = b.monthDays.reduce((a,c)=>a+c,0);
+  const winter = [10,11,0,1,2].reduce((a,m)=>a+b.monthDays[m],0) / tot;
+  const summer = [3,4,5,6,7,8].reduce((a,m)=>a+b.monthDays[m],0) / tot;
+  if (winter > 0.75) return ['Winter visitor','wi'];
+  if (summer > 0.8) return ['Summer resident','su'];
+  return ['Migrant','mi'];
+}
+
+function derive(){
+  TODAY = DATA.today;
+  B = {}; const yearSet = new Set();
+  const first = DATA.firstDay || TODAY;
+  const spanDays = Math.max(1, diffDays(TODAY, first) + 1);
+  for (const sp of DATA.species){
+    const rows = DATA.daily[sp.name] || [];
+    const b = {...sp, days: new Map(), total: 0, nDays: 0, first: null, last: null, years: {}, monthDays: Array(12).fill(0)};
+    for (const [d, c] of rows){
+      b.days.set(d, c); b.total += c; b.nDays++;
+      if (!b.first || d < b.first) b.first = d;
+      if (!b.last || d > b.last) b.last = d;
+      const y = +d.slice(0,4); yearSet.add(y);
+      const Y = b.years[y] ||= {count:0, days:0, first:d, last:d, weeks:Array(53).fill(0), months:Array(12).fill(0)};
+      Y.count += c; Y.days++; if (d < Y.first) Y.first = d; if (d > Y.last) Y.last = d;
+      Y.weeks[weekIdx(d)] += c; Y.months[+d.slice(5,7)-1] += c;
+      b.monthDays[+d.slice(5,7)-1]++;
+    }
+    b.lastHeard = DATA.lastHeard[sp.name] || null;
+    b.todayCount = b.days.get(TODAY) || 0;
+    b.hourly = DATA.hourly[sp.name] || null;
+    [b.season, b.sclass] = seasonOf(b, spanDays);
+    if (b.nDays || b.lastHeard) B[sp.name] = b;
+  }
+  for (const b of Object.values(B)) b.trust = trust(b);
+  for (const b of Object.values(B)) if (b.first) b.isNewEver = diffDays(TODAY, b.first) <= 21 && diffDays(b.first, first) > 14;
+  LIST = Object.values(B);
+  YEARS = [...yearSet].sort((a,b)=>b-a);
+  if (!YEARS.length) YEARS = [+TODAY.slice(0,4)];
+  CUR_YEAR = +TODAY.slice(0,4);
+}
+const visible = () => LIST.filter(b => !b.hidden);
+
+/* ---------- how sure are we? ---------- */
+const FAR = /goose|crane|swan|raven|crow|gull|hawk|eagle|heron|owl|killdeer|pelican|osprey|falcon|kestrel|cormorant|duck|mallard|loon|curlew|magpie|nighthawk|kingfisher|egret|ibis|tern/i;
+const LEVELS = ['Unlikely','Check it','Probable','Confident','Verified by you'];
+function confLevel(c){
+  if (c == null) return null;
+  const s = String(c).trim().toUpperCase();
+  if (/^(H|HIGH)/.test(s)) return 'H';
+  if (/^(M|MED)/.test(s)) return 'M';
+  if (/^(L|LOW)/.test(s)) return 'L';
+  const n = parseFloat(s); if (isNaN(n)) return null;
+  const v = n > 1 ? n/100 : n;
+  return v >= 0.8 ? 'H' : v >= 0.5 ? 'M' : 'L';
+}
+function trust(b){
+  const why = [];
+  let lvl, doubt = false;
+  if (b.total <= 2){ lvl = 1; why.push(`Only ${b.total === 1 ? 'one detection' : 'two detections'} ever.`); }
+  else if (b.nDays === 1){ lvl = 1; why.push(`Heard ${b.total} times, but all on one day (${fmtDayY(b.first)}).`); }
+  else if (b.nDays >= 10 || (b.nDays >= 3 && b.total >= 15)){ lvl = 3; why.push(`Heard ${num(b.total)} times on ${num(b.nDays)} different days.`); }
+  else { lvl = 2; why.push(`Heard ${num(b.total)} times on ${b.nDays} days.`); }
+
+  // the box's own confidence on each detection
+  const cs = DATA.confStats?.[b.name];
+  if (cs){
+    const t = {H:0,M:0,L:0}; let n = 0;
+    for (const [k,c] of Object.entries(cs)){ const L = confLevel(k); if (L){ t[L] += c; n += c; } }
+    if (n){
+      if (t.L / n > 0.6){ doubt = true; why.push(`The Haikubox itself was low-confidence on ${Math.round(100*t.L/n)}% of these.`); }
+      else if (t.H / n > 0.5) why.push(`The Haikubox was high-confidence on ${Math.round(100*t.H/n)}% of detections.`);
+    }
+  }
+  // what people report nearby (iNaturalist)
+  if (DATA.nearby){
+    const nb = DATA.nearby[b.name], r = DATA.nearbyRadius;
+    if (!nb || !nb.all){ doubt = true; if (lvl <= 1) lvl = 0; why.push(`Nobody has reported it on iNaturalist within ${r} km of you.`); }
+    else if (nb.all < 5){ doubt = true; why.push(`Rare near you: only ${nb.all} iNaturalist sighting${nb.all>1?'s':''} within ${r} km.`); }
+    else {
+      why.push(`Reported ${num(nb.all)} times by people within ${r} km${nb.month ? `, ${num(nb.month)} of them in ${MON[new Date().getMonth()]}` : ''}.`);
+      if (!nb.month && b.days.get(TODAY)) why.push(`But rarely reported nearby in ${MON[new Date().getMonth()]}.`);
+    }
+  }
+  if (doubt){
+    if (b.nDays >= 10){ lvl = Math.min(lvl, 2); why.push('Heard steadily, so probably real. If it seems odd, listen once: a sound the box keeps confusing (a squirrel, a mimic) can also repeat daily.'); }
+    else lvl = Math.min(lvl, 1);
+  }
+  // your own listening
+  const rc = DATA.reviewCounts?.[b.name];
+  if (rc?.wrong && rc.wrong >= (rc.correct||0)){ lvl = Math.min(lvl, 1); why.push(`You marked ${rc.wrong} recording${rc.wrong>1?'s':''} as wrong.`); }
+  if (b.verdict === 'correct' || (rc?.correct && !(rc.wrong >= rc.correct))){ lvl = 4; why.unshift(b.verdict === 'correct' ? 'You confirmed this bird is around.' : `You confirmed ${rc.correct} recording${rc.correct>1?'s':''}.`); }
+  if (FAR.test(b.name)) why.push('Loud, far-carrying call: it may have been some distance away or flying over rather than in the yard.');
+  return {lvl, label: LEVELS[lvl], why};
+}
+const needsReview = b => !b.hidden && !b.verdict && b.trust.lvl <= 1;
+
+/* ---------- shared bits ---------- */
+function photoTag(b, cls=''){
+  return b.photo ? `<img class="${cls}" src="${esc(b.photo)}" alt="${esc(b.name)}" loading="lazy">` : `<div class="noimg ${cls}">${NOIMG}</div>`;
+}
+function sparkline(b, n=21){
+  let out = '', vals = [];
+  for (let i = n-1; i >= 0; i--) vals.push(b.days.get(dayStr(addDays(parseDay(TODAY), -i))) || 0);
+  const mx = Math.max(...vals, 1);
+  for (const v of vals) out += `<i class="${v?'':'z'}" style="height:${v ? Math.max(12, 100*Math.sqrt(v/mx)) : 10}%"></i>`;
+  return `<div class="spark" title="Last ${n} days">${out}</div>`;
+}
+function card(b, mode){
+  let meta = '', cnt = '';
+  if (mode === 'today'){
+    cnt = `<span class="cnt">${num(b.todayCount)} today</span>`;
+    meta = b.lastHeard && b.lastHeard.slice(0,10) === TODAY ? `Last heard ${fmtTime(b.lastHeard)} &middot; ${ago(b.lastHeard)}` : `Heard on ${num(b.nDays)} days`;
+  } else {
+    meta = `Heard on ${num(b.nDays)} day${b.nDays===1?'':'s'}${b.last ? ` &middot; last ${fmtDay(b.last)}` : ''}`;
+  }
+  const badge = b.isNewEver ? `<span class="badge new badge">New!</span>` : `<span class="badge ${b.sclass}">${b.season}</span>`;
+  const c = el('div', {className:'card'}, `
+    <div class="ph">${photoTag(b)}${badge.replace('class="badge','class="badge')}${cnt}</div>
+    <div class="body"><div class="nm">${esc(b.name)}</div><div class="sci">${esc(b.sci)}</div>
+    <div class="meta">${meta}</div><div><span class="tr t${b.trust.lvl}" title="${esc(b.trust.why.join(' '))}">${b.trust.label}</span></div>${sparkline(b)}</div>`);
+  c.querySelector('.ph .badge')?.classList.add('badge');
+  c.onclick = () => openBird(b.name);
+  return c;
+}
+function mini(b, right){
+  const m = el('div', {className:'mini'}, `${photoTag(b)}<div><div class="t">${esc(b.name)}</div><div class="s">${esc(b.season)}</div></div><div class="r">${right}</div>`);
+  m.onclick = () => openBird(b.name);
+  return m;
+}
+function fillYearSelect(sel, withAll){
+  sel.innerHTML = (withAll ? `<option value="all">All years</option>` : '') + YEARS.map(y => `<option value="${y}">${y}</option>`).join('');
+}
+
+/* ---------- TODAY ---------- */
+function renderToday(){
+  const h = new Date().getHours();
+  $('#hello').textContent = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+  const vis = visible();
+  const todayBirds = vis.filter(b => b.todayCount > 0).sort((a,b) => b.todayCount - a.todayCount);
+  const yest = dayStr(addDays(parseDay(TODAY), -1));
+  const yearBirds = vis.filter(b => b.years[CUR_YEAR]);
+  const todayDet = todayBirds.reduce((a,b)=>a+b.todayCount, 0);
+  const yestDet = vis.reduce((a,b)=>a+(b.days.get(yest)||0), 0);
+  const yestSp = vis.filter(b => b.days.get(yest)).length;
+
+  $('#helloSub').textContent = todayBirds.length
+    ? `${todayBirds.length} species have visited ${DATA.box.name || 'your yard'} so far today.`
+    : (LIST.length ? `Nothing yet today, the yard is quiet. Here's what you heard recently.` : '');
+
+  const prevYearCount = vis.filter(b => b.years[CUR_YEAR-1]).length;
+  $('#tiles').innerHTML = [
+    [todayBirds.length, 'Species today', `${yestSp} yesterday`],
+    [num(todayDet), 'Detections today', `${num(yestDet)} yesterday`],
+    [yearBirds.length, `Species in ${CUR_YEAR}`, prevYearCount ? `${prevYearCount} in ${CUR_YEAR-1}` : ''],
+    [vis.length, 'Species all-time', DATA.firstDay ? `since ${fmtDayY(DATA.firstDay)}` : ''],
+  ].map(([n,l,d]) => `<div class="tile"><div class="n">${n}</div><div class="l">${l}</div><div class="d">${d}</div></div>`).join('');
+
+  const grid = $('#todayGrid'); grid.innerHTML = '';
+  let show = todayBirds, title = 'Heard today';
+  if (!show.length){
+    show = vis.filter(b => b.last).sort((a,b) => (b.last > a.last) - (b.last < a.last) || b.total - a.total).slice(0, 12);
+    title = 'Heard recently';
+  }
+  $('#todayTitle').textContent = title;
+  $('#todaySub').textContent = show.length ? 'Tap a bird for photos, sounds & history' : '';
+  if (!show.length) grid.innerHTML = `<div class="empty">No birds yet. Your first sync is running, this page will fill in automatically.</div>`;
+  show.forEach(b => grid.append(card(b, todayBirds.length ? 'today' : 'guide')));
+
+  // arrivals
+  const arr = vis.filter(b => { const Y = b.years[CUR_YEAR]; return Y && diffDays(TODAY, Y.first) <= 21 && diffDays(Y.first, `${CUR_YEAR}-01-01`) > 7; })
+                 .sort((a,b) => (b.years[CUR_YEAR].first > a.years[CUR_YEAR].first) ? 1 : -1);
+  const ad = $('#arrivals'); ad.innerHTML = '';
+  arr.slice(0,6).forEach(b => ad.append(mini(b, `${b.isNewEver ? '<span class="badge new">First ever</span><br>' : ''}${fmtDay(b.years[CUR_YEAR].first)}`)));
+  if (!arr.length) ad.innerHTML = `<div class="empty">No new arrivals in the last 3 weeks.</div>`;
+
+  // gone quiet
+  const quiet = vis.filter(b => {
+    if (!b.last || diffDays(TODAY, b.last) < 10) return false;
+    let n = 0; for (let i = 10; i < 70; i++) if (b.days.get(dayStr(addDays(parseDay(TODAY), -i)))) n++;
+    return n >= 8;
+  }).sort((a,b) => (a.last < b.last) ? 1 : -1);
+  const qd = $('#quiet'); qd.innerHTML = '';
+  quiet.slice(0,6).forEach(b => qd.append(mini(b, `last ${fmtDay(b.last)}`)));
+  if (!quiet.length) qd.innerHTML = `<div class="empty">All your regulars are still around.</div>`;
+
+  // hours
+  const hrs = Array(24).fill(0);
+  for (const [ts, sp] of DATA.recent){ if (B[sp] && !B[sp].hidden) hrs[new Date(ts).getHours()]++; }
+  $('#hourChart').innerHTML = hrs.some(Boolean) ? hourBars(hrs, 150) : `<div class="empty">Builds up as detections come in.</div>`;
+}
+
+/* ---------- charts (plain SVG) ---------- */
+function hourBars(hrs, H=120){
+  const W = 360, pad = 18, bw = (W - 8) / 24, mx = Math.max(...hrs, 1);
+  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img">`;
+  hrs.forEach((v, i) => {
+    const h = (H - pad - 6) * v / mx;
+    s += `<rect x="${4 + i*bw + 1}" y="${H - pad - h}" width="${bw - 2}" height="${Math.max(h, v?2:0)}" rx="2" fill="var(--heat3)"><title>${i % 12 || 12}${i<12?'am':'pm'}: ${v} detections</title></rect>`;
+  });
+  [0,6,12,18].forEach(i => s += `<text x="${4 + i*bw}" y="${H-4}">${i===0?'12am':i===12?'noon':(i%12)+(i<12?'am':'pm')}</text>`);
+  return s + `</svg>`;
+}
+function monthlyChart(){
+  const yrs = YEARS.slice(0, 3).reverse();
+  const colors = ['var(--heat2)','var(--heat3)','var(--heat5)'].slice(-yrs.length);
+  const counts = yrs.map(y => MON.map((_, m) => visible().filter(b => b.years[y] && b.years[y].months[m] > 0).length));
+  const W = 520, H = 220, pl = 28, pb = 22, mx = Math.ceil(Math.max(4, ...counts.flat())/4)*4;
+  const gw = (W - pl) / 12, bw = (gw - 8) / yrs.length;
+  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}">`;
+  for (let t = 0; t <= 4; t++){ const v = Math.round(mx*t/4), y = H - pb - (H-pb-10)*t/4; s += `<g class="grid"><line x1="${pl}" x2="${W}" y1="${y}" y2="${y}"/></g><text x="0" y="${y+4}">${v}</text>`; }
+  counts.forEach((row, yi) => row.forEach((v, m) => {
+    const h = (H-pb-10) * v / mx;
+    s += `<rect x="${pl + m*gw + 4 + yi*bw}" y="${H-pb-h}" width="${bw-1}" height="${h}" rx="2" fill="${colors[yi]}"><title>${MON[m]} ${yrs[yi]}: ${v} species</title></rect>`;
+  }));
+  MON.forEach((mn, m) => s += `<text x="${pl + m*gw + gw/2 - 9}" y="${H-5}">${mn}</text>`);
+  s += `</svg><div class="legend" style="margin-top:6px;gap:10px">${yrs.map((y,i)=>`<span><i style="background:${colors[i]}"></i> ${y}</span>`).join('')}</div>`;
+  return s;
+}
+function dailyChart(){
+  const n = 365, vals = [], spv = [];
+  for (let i = n-1; i >= 0; i--){
+    const d = dayStr(addDays(parseDay(TODAY), -i)); let t = 0, sp = 0;
+    for (const b of visible()){ const c = b.days.get(d); if (c){ t += c; sp++; } }
+    vals.push([d, t, sp]);
+  }
+  const W = 520, H = 220, pl = 28, pb = 22, mx = Math.ceil(Math.max(4, ...vals.map(v=>v[2]))/4)*4;
+  const x = i => pl + (W-pl) * i / (n-1), y = v => H - pb - (H-pb-10) * v / mx;
+  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}">`;
+  for (let t = 0; t <= 4; t++){ const v = Math.round(mx*t/4); s += `<g class="grid"><line x1="${pl}" x2="${W}" y1="${y(v)}" y2="${y(v)}"/></g><text x="0" y="${y(v)+4}">${v}</text>`; }
+  // 7-day average of species count
+  const avg = vals.map((_, i) => { const w = vals.slice(Math.max(0,i-6), i+1); return w.reduce((a,c)=>a+c[2],0)/w.length; });
+  s += `<path d="M${vals.map((v,i)=>`${x(i)},${y(v[2])}`).join('L')}" fill="none" stroke="var(--heat1)" stroke-width="1"/>`;
+  s += `<path d="M${avg.map((v,i)=>`${x(i).toFixed(1)},${y(v).toFixed(1)}`).join('L')}" fill="none" stroke="var(--accent)" stroke-width="2.2" stroke-linejoin="round"/>`;
+  vals.forEach((v,i) => { if (parseDay(v[0]).getDate() === 1) s += `<text x="${x(i)-8}" y="${H-5}">${MON[parseDay(v[0]).getMonth()]}</text>`; });
+  s += `</svg><div class="legend" style="margin-top:6px">Species heard per day (line = 7-day average)</div>`;
+  return s;
+}
+
+/* ---------- GUIDE ---------- */
+function renderGuide(){
+  const q = $('#gSearch').value.toLowerCase().trim(), sort = $('#gSort').value, yr = $('#gYear').value;
+  const showHidden = $('#gHidden').checked, onlySure = $('#gSure').checked;
+  const seasons = ['all', ...new Set(LIST.map(b => b.season))];
+  $('#gChips').innerHTML = seasons.map(s => `<button class="chip ${s===guideFilter?'on':''}" data-s="${esc(s)}">${s==='all'?'All':esc(s)}</button>`).join('');
+  $('#gChips').querySelectorAll('.chip').forEach(c => c.onclick = () => { guideFilter = c.dataset.s; renderGuide(); });
+  let L = LIST.filter(b => (showHidden || !b.hidden) && (!onlySure || b.trust.lvl >= 2) && (guideFilter==='all' || b.season===guideFilter)
+      && (yr === 'all' || b.years[yr]) && (!q || b.name.toLowerCase().includes(q) || b.sci.toLowerCase().includes(q)));
+  const key = { days: (a,b) => b.nDays - a.nDays, az: (a,b) => a.name.localeCompare(b.name),
+    recent: (a,b) => (b.last||'').localeCompare(a.last||''), newest: (a,b) => (b.first||'').localeCompare(a.first||'') }[sort];
+  L.sort(key);
+  $('#guideSub').textContent = `${L.length} species`;
+  const g = $('#guideGrid'); g.innerHTML = '';
+  L.forEach(b => { const c = card(b, 'guide'); if (b.hidden) c.style.opacity = .45; g.append(c); });
+  if (!L.length) g.innerHTML = `<div class="empty">No birds match.</div>`;
+}
+
+/* ---------- CALENDAR ---------- */
+function heat(v, mx){
+  if (!v) return 'var(--heat0)';
+  const r = Math.log(1+v) / Math.log(1+mx);
+  return `var(--heat${Math.min(5, Math.max(1, Math.ceil(r*5)))})`;
+}
+function stripHTML(weeks, mx, year, cmp=false){
+  let s = `<div class="strip ${cmp?'cmp':''}">`;
+  weeks.forEach((v, i) => {
+    const st = addDays(new Date(year,0,1), i*7);
+    s += `<i style="background:${heat(v,mx)}" title="${cmp?year+' ':''}Week of ${MON[st.getMonth()]} ${st.getDate()}: ${v} detections"></i>`;
+  });
+  if (!cmp && year === CUR_YEAR) s += `<span class="today" style="left:calc(${(weekIdx(TODAY)+.5)/53*100}% - 1px)" title="Today"></span>`;
+  return s + `</div>`;
+}
+function renderCalendar(){
+  const y = +$('#cYear').value || CUR_YEAR, cmp = +$('#cCompare').value || null, min = +$('#cMin').value;
+  const q = $('#cSearch').value.toLowerCase().trim(), sort = $('#cSort').value;
+  let L = visible().filter(b => b.years[y] && b.years[y].days >= min && (!q || b.name.toLowerCase().includes(q)));
+  const sorters = { arrival: (a,b) => a.years[y].first.localeCompare(b.years[y].first) || b.years[y].days - a.years[y].days,
+                    days: (a,b) => b.years[y].days - a.years[y].days, az: (a,b) => a.name.localeCompare(b.name) };
+  L.sort(sorters[sort]);
+  const mx = Math.max(1, ...L.flatMap(b => b.years[y].weeks), ...(cmp ? L.flatMap(b => b.years[cmp]?.weeks || []) : []));
+  const c = $('#cal');
+  let h = `<div class="cal-row head"><div>${L.length} species${cmp ? ` &middot; <span style="opacity:.7">thin bar = ${cmp}</span>`:''}</div><div class="months">${MON.map(m=>`<span>${m}</span>`).join('')}</div><div class="cal-n">days</div></div>`;
+  for (const b of L){
+    h += `<div class="cal-row" data-n="${esc(b.name)}"><div class="cal-name">${photoTag(b)}<span title="${esc(b.name)}">${esc(b.name)}</span></div>
+      <div>${stripHTML(b.years[y].weeks, mx, y)}${cmp ? `<div style="margin-top:2px">${stripHTML(b.years[cmp]?.weeks || Array(53).fill(0), mx, cmp, true)}</div>` : ''}</div>
+      <div class="cal-n">${b.years[y].days}${cmp ? `<br><span style="opacity:.7">${b.years[cmp]?.days || 0}</span>`:''}</div></div>`;
+  }
+  if (!L.length) h += `<div class="empty" style="padding:20px 0">No birds match these filters for ${y}. Try "Heard 1+ days".</div>`;
+  c.innerHTML = h;
+  c.querySelectorAll('.cal-row[data-n]').forEach(r => r.onclick = () => openBird(r.dataset.n));
+}
+
+/* ---------- TRENDS ---------- */
+function renderTrends(){
+  $('#tMonthly').innerHTML = monthlyChart();
+  $('#tDaily').innerHTML = dailyChart();
+  const top = visible().filter(b => b.years[CUR_YEAR]).sort((a,b) => b.years[CUR_YEAR].days - a.years[CUR_YEAR].days).slice(0, 12);
+  $('#tTopTitle').textContent = `Most heard in ${CUR_YEAR} (days)`;
+  const mx = top[0]?.years[CUR_YEAR].days || 1;
+  const t = $('#tTop'); t.innerHTML = '';
+  top.forEach(b => { const r = el('div', {className:'row'}, `<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(b.name)}</span><div class="bar" style="width:${100*b.years[CUR_YEAR].days/mx}%"></div><span class="v">${b.years[CUR_YEAR].days}</span>`); r.onclick = () => openBird(b.name); t.append(r); });
+  if (!top.length) t.innerHTML = `<div class="empty">No data yet.</div>`;
+  renderCompare();
+}
+function renderCompare(){
+  const a = +$('#tA').value, b = +$('#tB').value, out = $('#tCompare');
+  if (!a || !b || a === b){ out.innerHTML = `<div class="empty">${YEARS.length < 2 ? 'Year comparisons appear once you have more than one year of history.' : 'Pick two different years.'}</div>`; return; }
+  const V = visible();
+  const onlyA = V.filter(x => x.years[a] && !x.years[b]), onlyB = V.filter(x => x.years[b] && !x.years[a]);
+  const both = V.filter(x => x.years[a] && x.years[b]).length;
+  out.innerHTML = `<p style="margin:0 0 8px;color:var(--ink2);font-size:14px">${both} species heard in both years.</p>`;
+  const sec = (title, L, y) => { const d = el('div', {}, `<h3 style="font-size:14px;margin:12px 0 4px">${title} (${L.length})</h3>`); L.slice(0, 8).forEach(x => d.append(mini(x, `${x.years[y].days} days`))); if (!L.length) d.append(el('div', {className:'empty'}, 'None')); if (L.length > 8) d.append(el('div', {className:'empty'}, `+ ${L.length-8} more`)); return d; };
+  out.append(sec(`Only in ${a}`, onlyA, a), sec(`Only in ${b}`, onlyB, b));
+}
+
+/* ---------- recordings & verdicts ---------- */
+function recHTML(b, limit=6){
+  const recs = (DATA.recordings?.[b.name] || []).slice(0, limit);
+  if (!recs.length) return `<div class="empty">No recordings saved yet. Recordings are collected while Yard Birds is running (the Haikubox only shares the last day of clips). You can also listen in the Haikubox app.</div>`;
+  return `<div class="recs">${recs.map(r => {
+    const L = confLevel(r.conf);
+    return `<div class="rec" data-ts="${esc(r.ts)}">
+      <span>${fmtDay(r.ts.slice(0,10))}, ${fmtTime(r.ts)}</span>
+      <span class="cf" title="Haikubox confidence">${L || '?'}</span>
+      <audio controls preload="none" src="${esc(r.wav)}" onerror="this.outerHTML='<span class=gone>Recording no longer available</span>'"></audio>
+      <span class="vb"><button class="ok ${r.verdict==='correct'?'on':''}" title="Sounds right" data-v="correct">&#10003;</button><button class="bad ${r.verdict==='wrong'?'on':''}" title="Not this bird" data-v="wrong">&#10007;</button></span>
+    </div>`;}).join('')}</div>`;
+}
+function wireRecs(root, b){
+  root.querySelectorAll('.rec').forEach(row => row.querySelectorAll('.vb button').forEach(btn => btn.onclick = async e => {
+    e.stopPropagation();
+    const verdict = btn.classList.contains('on') ? null : btn.dataset.v;
+    await post('/api/review', {name: b.name, ts: row.dataset.ts, verdict});
+    row.querySelectorAll('.vb button').forEach(x => x.classList.toggle('on', x === btn && !!verdict));
+    loadData();
+  }));
+}
+async function setVerdict(name, verdict){
+  await post('/api/verdict', {name, verdict});
+  await loadData();
+}
+function trustHTML(b){
+  return `<div class="trust"><div style="font-size:12px;color:var(--ink3)">How sure is it?</div>
+    <div class="lvl tr t${b.trust.lvl}" style="font-size:18px">${b.trust.label}</div>
+    <ul>${b.trust.why.map(w => `<li>${esc(w)}</li>`).join('')}</ul>
+    <div class="acts">
+      <button class="btn yes ${b.verdict==='correct'?'on':''}" data-verdict="correct">&#10003; Yes, it's here</button>
+      <button class="btn no ${b.verdict==='wrong'?'on':''}" data-verdict="wrong">&#10007; No, it's wrong</button>
+    </div></div>`;
+}
+function wireTrust(root, b, after){
+  root.querySelectorAll('[data-verdict]').forEach(btn => btn.onclick = async e => {
+    e.stopPropagation();
+    await setVerdict(b.name, b.verdict === btn.dataset.verdict ? null : btn.dataset.verdict);
+    after && after();
+  });
+}
+function renderReview(){
+  const L = LIST.filter(needsReview).sort((a,b) => a.trust.lvl - b.trust.lvl || a.total - b.total || (b.last||'').localeCompare(a.last||''));
+  $('#revSub').textContent = L.length ? `${L.length} bird${L.length>1?'s':''} to check` : 'All caught up';
+  $('#locNote').innerHTML = DATA.nearby ? `"Reported near you" compares against iNaturalist sightings within ${DATA.nearbyRadius} km.`
+    : (STATIC ? `<b>Tip:</b> add YB_LATITUDE and YB_LONGITUDE in the GitHub repository settings and each bird will also be checked against sightings near you.` : `<b>Tip:</b> add your approximate latitude and longitude to <code>YardBirds/config.json</code> and the app will also check whether each bird is actually reported near you.`);
+  $('#deviceNote').textContent = STATIC ? 'Your answers are saved on this device (phone and computer each keep their own).' : '';
+  const out = $('#reviewList'); out.innerHTML = '';
+  if (!L.length) out.innerHTML = `<div class="empty">Nothing needs checking right now.</div>`;
+  for (const b of L){
+    const d = el('div', {className:'rv'}, `
+      <div class="ph">${photoTag(b)}</div>
+      <div>
+        <div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap"><h3>${esc(b.name)}</h3><span class="sci" style="font-style:italic;color:var(--ink3)">${esc(b.sci)}</span><span class="tr t${b.trust.lvl}">${b.trust.label}</span></div>
+        <ul class="why">${b.trust.why.map(w => `<li>${esc(w)}</li>`).join('')}</ul>
+        ${recHTML(b, 3)}
+        <div class="links" style="margin-top:10px">
+          <a class="btn" href="${aabUrl(b.name)}" target="_blank" rel="noopener">&#9835; Hear the real song</a>
+          <button class="btn yes" data-verdict="correct">&#10003; Yes, it's here</button>
+          <button class="btn no" data-verdict="wrong">&#10007; No, it's wrong</button>
+          <button class="btn" data-open="1">Details</button>
+        </div>
+      </div>`);
+    d.querySelector('.ph').onclick = () => openBird(b.name);
+    d.querySelector('[data-open]').onclick = () => openBird(b.name);
+    wireRecs(d, b); wireTrust(d, b);
+    out.append(d);
+  }
+  const W = LIST.filter(b => b.verdict === 'wrong' || b.hidden);
+  const wo = $('#wrongList'); wo.innerHTML = '';
+  W.forEach(b => { const m = mini(b, `heard ${b.total}&times;<br><a href="#">Undo</a>`); m.onclick = e => { e.preventDefault(); setVerdict(b.name, null); }; wo.append(m); });
+  if (!W.length) wo.innerHTML = `<div class="empty">None.</div>`;
+}
+
+/* ---------- BIRD DETAIL ---------- */
+function aabUrl(name){ return 'https://www.allaboutbirds.org/guide/' + name.replace(/['’]/g,'').replace(/\s+/g,'_'); }
+function openBird(name){
+  const b = B[name]; if (!b) return;
+  location.hash = '#bird/' + encodeURIComponent(name);
+}
+function showBird(name){
+  const b = B[name]; if (!b) return;
+  const photos = b.photos.length ? b.photos : (b.photo ? [{url:b.photo, large:b.photo, credit:''}] : []);
+  const yrs = Object.keys(b.years).map(Number).sort((a,c)=>c-a);
+  const mxW = Math.max(1, ...yrs.flatMap(y => b.years[y].weeks));
+  const monthTot = Array(12).fill(0); yrs.forEach(y => b.years[y].months.forEach((v,i) => monthTot[i] += v));
+  const mxM = Math.max(1, ...monthTot);
+  const m = $('#modal');
+  m.innerHTML = `
+    <button class="x" aria-label="Close">&times;</button>
+    <div class="mtop">
+      <div class="gal">
+        ${photos.length ? `<img class="big" id="bigImg" src="${esc(photos[0].large || photos[0].url)}" alt="${esc(b.name)}">` : `<div class="big" style="aspect-ratio:4/3;display:grid;place-items:center">${NOIMG}</div>`}
+        ${photos.length > 1 ? `<div class="thumbs">${photos.map((p,i)=>`<img src="${esc(p.url)}" data-i="${i}" class="${i?'':'on'}" alt="">`).join('')}</div>` : ''}
+        <div class="credit" id="credit">${esc(photos[0]?.credit || '')}</div>
+      </div>
+      <div class="minfo">
+        <span class="badge ${b.sclass}">${b.season}</span> ${b.isNewEver ? '<span class="badge new">New to your yard</span>' : ''}
+        <h2 style="margin-top:10px">${esc(b.name)}</h2>
+        <div class="sci">${esc(b.sci)}</div>
+        <div class="kv">
+          <div><b>${num(b.nDays)}</b><span>days heard</span></div>
+          <div><b>${num(b.total)}</b><span>total detections</span></div>
+          <div><b>${b.first ? fmtDayY(b.first) : '-'}</b><span>first heard</span></div>
+          <div><b>${b.lastHeard ? fmtDay(b.lastHeard.slice(0,10)) + ', ' + fmtTime(b.lastHeard) : b.last ? fmtDayY(b.last) : '-'}</b><span>last heard</span></div>
+        </div>
+        ${trustHTML(b)}
+        ${b.summary ? `<div style="height:12px"></div><div class="summary" id="sum">${esc(b.summary)}</div><a href="#" id="more" style="font-size:13px">Read more</a>` : ''}
+        <div class="links">
+          <a class="btn primary" href="${aabUrl(b.name)}" target="_blank" rel="noopener">&#9835; ID tips &amp; songs</a>
+          ${b.taxon_id || b.wiki ? '' : ''}
+          ${b.wiki ? `<a class="btn" href="${esc(b.wiki)}" target="_blank" rel="noopener">Wikipedia</a>` : ''}
+          <a class="btn" href="https://www.inaturalist.org/taxa/search?q=${encodeURIComponent(b.sci || b.name)}" target="_blank" rel="noopener">iNaturalist</a>
+        </div>
+      </div>
+    </div>
+    <div class="mbody">
+      <h3>Recordings: does it sound right?</h3>
+      ${recHTML(b, 8)}
+      <h3>Week by week</h3>
+      ${yrs.map(y => `<div class="yrow"><b>${y}</b>${stripHTML(b.years[y].weeks, mxW, y)}<span class="s2">${b.years[y].days} days &middot; ${fmtDay(b.years[y].first)} to ${fmtDay(b.years[y].last)}</span></div>`).join('')}
+      <div class="months" style="margin-left:62px;margin-right:200px;font-size:11px;color:var(--ink3)">${MON.map(x=>`<span>${x}</span>`).join('')}</div>
+      <div class="cgrid" style="margin-top:4px">
+        <div><h3>Busiest months</h3>${monthBars(monthTot, mxM)}</div>
+        <div><h3>Time of day</h3>${b.hourly ? hourBars(b.hourly, 130) : '<div class="empty">Builds up as new detections come in.</div>'}</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:22px;flex-wrap:wrap">
+        <button class="btn" id="dlBird">&#8681; Download this bird's data</button>
+        <button class="btn" id="hideBird">${b.hidden ? 'Un-hide this bird' : 'Hide this bird (misidentification)'}</button>
+      </div>
+    </div>`;
+  m.querySelector('.x').onclick = closeBird;
+  wireRecs(m, b); wireTrust(m, b, () => showBird(name));
+  m.querySelectorAll('.thumbs img').forEach(t => t.onclick = () => {
+    const p = photos[+t.dataset.i]; $('#bigImg').src = p.large || p.url; $('#credit').textContent = p.credit || '';
+    m.querySelectorAll('.thumbs img').forEach(x => x.classList.toggle('on', x === t));
+  });
+  const more = $('#more'); if (more) more.onclick = e => { e.preventDefault(); $('#sum').classList.toggle('open'); more.textContent = $('#sum').classList.contains('open') ? 'Show less' : 'Read more'; };
+  $('#dlBird').onclick = () => {
+    const rows = [['date','detections'], ...[...b.days.entries()].sort()];
+    const blob = new Blob([rows.map(r => r.join(',')).join('\n')], {type:'text/csv'});
+    const a = el('a', {href: URL.createObjectURL(blob), download: b.name.replace(/\W+/g,'_') + '.csv'}); a.click();
+  };
+  $('#hideBird').onclick = async () => {
+    await post('/api/hide', {name: b.name, hidden: !b.hidden});
+    await loadData(); showBird(b.name);
+  };
+  $('#ov').classList.add('on');
+  $('#ov').scrollTop = 0;
+}
+function monthBars(vals, mx){
+  const W = 360, H = 130, pb = 18, bw = W / 12;
+  let s = `<svg class="chart" viewBox="0 0 ${W} ${H}">`;
+  vals.forEach((v,i) => { const h = (H-pb-6) * v / mx; s += `<rect x="${i*bw+3}" y="${H-pb-h}" width="${bw-6}" height="${h}" rx="3" fill="var(--heat3)"><title>${MON[i]}: ${v} detections</title></rect><text x="${i*bw+bw/2-8}" y="${H-4}">${MON[i][0]}</text>`; });
+  return s + `</svg>`;
+}
+function closeBird(){
+  $('#ov').classList.remove('on');
+  if (location.hash.startsWith('#bird/')) location.hash = '#' + lastView;
+}
+$('#ov').onclick = e => { if (e.target.id === 'ov') closeBird(); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('#ov').classList.contains('on')) closeBird(); });
+
+/* ---------- phone ---------- */
+const onComputer = ['localhost','127.0.0.1'].includes(location.hostname);
+function qrSVG(text){
+  try { const q = qrcode(0, 'M'); q.addData(text); q.make(); return q.createSvgTag({cellSize: 6, margin: 2, scalable: true}); }
+  catch { return ''; }
+}
+function showPhone(){
+  const P = DATA?.phone || {}, wifi = P.wifi || [], ts = P.tailscale || [];
+  const main = wifi[0] || ts[0];
+  const m = $('#modal');
+  m.innerHTML = `<button class="x" aria-label="Close">&times;</button><div style="padding:28px 28px 30px">
+    <h2 style="font-size:28px">Yard Birds on your phone</h2>
+    ${main ? `
+    <div class="qrbox" style="margin-top:18px">
+      <div class="qr">${qrSVG(main)}</div>
+      <div>
+        <div style="font-size:14px;color:var(--ink2)">Point your phone's camera at the code, or type this address into Safari or Chrome on your phone:</div>
+        ${wifi.map(u => `<div class="url">${esc(u)}</div>`).join('<br>')}
+        <div style="font-size:13px;color:var(--ink3);margin-top:2px">${wifi.length ? 'Works when your phone is on your home Wi-Fi.' : ''}</div>
+        ${ts.length ? `<div style="margin-top:10px;font-size:14px;color:var(--ink2)"><b>Away from home</b> (Tailscale is on):</div>${ts.map(u => `<div class="url">${esc(u)}</div>`).join('<br>')}` : ''}
+      </div>
+    </div>` : `<p>No network address found. Make sure this computer is connected to Wi-Fi or a network cable.</p>`}
+    <h3 style="font-size:17px;margin:24px 0 4px">Make it an app icon</h3>
+    <ol class="steps">
+      <li><b>iPhone:</b> open the address in <b>Safari</b> &rarr; tap the Share button &rarr; <b>Add to Home Screen</b>.</li>
+      <li><b>Android:</b> open it in <b>Chrome</b> &rarr; tap the &#8942; menu &rarr; <b>Add to Home screen</b> (or Install app).</li>
+    </ol>
+    <h3 style="font-size:17px;margin:20px 0 4px">Good to know</h3>
+    <ul class="steps">
+      <li>This computer needs to be on with the Yard Birds window open (sleep turns it off). Your phone shows "can't reach" otherwise.</li>
+      <li>If the phone can't connect the first time, Windows Firewall probably asked a question on this computer: choose <b>Allow</b> for <b>Private networks</b>.</li>
+      <li>${ts.length ? 'Tailscale is set up, so the second address works on cellular too.' : '<b>Want it away from home?</b> Install the free <b>Tailscale</b> app on this computer and your phone and sign in to both with the same account. Restart Yard Birds and an "away from home" address appears here. It stays private, no one else can reach it.'}</li>
+    </ul>
+  </div>`;
+  m.querySelector('.x').onclick = () => $('#ov').classList.remove('on');
+  $('#ov').classList.add('on');
+}
+$('#phoneBtn').onclick = showPhone;
+
+/* ---------- routing ---------- */
+let lastView = 'today';
+function route(){
+  const h = location.hash.slice(1) || 'today';
+  if (h.startsWith('bird/')){ showBird(decodeURIComponent(h.slice(5))); if (!document.querySelector('.view.on')) setView(lastView); return; }
+  $('#ov').classList.remove('on');
+  setView(['today','guide','calendar','trends','review'].includes(h) ? h : 'today');
+}
+function setView(v){
+  lastView = v;
+  document.querySelectorAll('.view').forEach(s => s.classList.toggle('on', s.id === 'v-'+v));
+  document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('on', a.dataset.v === v));
+  renderView(v);
+}
+function renderView(v){
+  if (!DATA) return;
+  const n = LIST.filter(needsReview).length, rc = $('#revCount');
+  rc.hidden = !n; rc.textContent = n;
+  ({today: renderToday, guide: renderGuide, calendar: renderCalendar, trends: renderTrends, review: renderReview})[v]();
+}
+window.addEventListener('hashchange', route);
+
+/* ---------- static (GitHub) mode: answers are saved on this device ---------- */
+const STATIC = !!window.YB_STATIC;
+const LS_KEY = 'yardbirds-reviews-v1';
+function loadLocal(){ try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch { return {}; } }
+let LOCAL = Object.assign({verdicts:{}, clips:{}, hidden:{}}, loadLocal());
+function saveLocal(){ try { localStorage.setItem(LS_KEY, JSON.stringify(LOCAL)); } catch {} }
+function applyLocal(){
+  for (const sp of DATA.species){
+    if (sp.name in LOCAL.verdicts) sp.verdict = LOCAL.verdicts[sp.name];
+    if (sp.name in LOCAL.hidden) sp.hidden = LOCAL.hidden[sp.name];
+    else if (sp.name in LOCAL.verdicts) sp.hidden = sp.verdict === 'wrong';
+  }
+  const rc = {};
+  for (const [name, recs] of Object.entries(DATA.recordings || {})) for (const r of recs){
+    const v = LOCAL.clips[name + '|' + r.ts]; if (v !== undefined) r.verdict = v;
+  }
+  for (const [key, v] of Object.entries(LOCAL.clips)){ if (!v) continue; const name = key.split('|')[0]; (rc[name] ||= {correct:0, wrong:0})[v]++; }
+  DATA.reviewCounts = rc;
+}
+async function post(path, body){
+  if (!STATIC) return fetch(path, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)});
+  if (path === '/api/review'){ if (body.verdict) LOCAL.clips[body.name + '|' + body.ts] = body.verdict; else delete LOCAL.clips[body.name + '|' + body.ts]; }
+  if (path === '/api/verdict'){ if (body.verdict) LOCAL.verdicts[body.name] = body.verdict; else delete LOCAL.verdicts[body.name]; LOCAL.hidden[body.name] = body.verdict === 'wrong'; }
+  if (path === '/api/hide'){ LOCAL.hidden[body.name] = !!body.hidden; }
+  saveLocal();
+}
+function downloadCSV(){
+  const sci = Object.fromEntries(DATA.species.map(s => [s.name, s.sci]));
+  const rows = [];
+  for (const [name, days] of Object.entries(DATA.daily)) for (const [d, c] of days) rows.push([d, name, sci[name] || '', c]);
+  rows.sort((a,b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]));
+  const q = v => /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g,'""') + '"' : v;
+  const text = [['date','common_name','scientific_name','detections'], ...rows].map(r => r.map(q).join(',')).join('\n');
+  const a = el('a', {href: URL.createObjectURL(new Blob([text], {type:'text/csv'})), download: `yard_birds_${TODAY}.csv`}); a.click();
+}
+if (STATIC){
+  $('#syncBtn').hidden = true;
+  $('#csvBtn').onclick = e => { e.preventDefault(); downloadCSV(); };
+}
+
+/* ---------- data + sync ---------- */
+async function loadData(){
+  const r = await fetch(STATIC ? 'data.json?t=' + Date.now() : '/api/data', {cache:'no-store'});
+  DATA = await r.json();
+  if (STATIC) applyLocal();
+  derive();
+  $('#boxName').textContent = DATA.box.name || 'Haikubox';
+  const keepYear = (sel, def) => { const v = sel.value; return YEARS.map(String).includes(v) ? v : def; };
+  const gy = $('#gYear').value || 'all'; fillYearSelect($('#gYear'), true); $('#gYear').value = gy;
+  const cy = keepYear($('#cYear'), String(YEARS[0])); fillYearSelect($('#cYear')); $('#cYear').value = cy;
+  const cc = $('#cCompare').value; $('#cCompare').innerHTML = `<option value="">Compare with...</option>` + YEARS.map(y=>`<option value="${y}">${y}</option>`).join(''); $('#cCompare').value = cc;
+  const ta = keepYear($('#tA'), String(YEARS[0])), tb = keepYear($('#tB'), String(YEARS[1] ?? YEARS[0]));
+  fillYearSelect($('#tA')); fillYearSelect($('#tB')); $('#tA').value = ta; $('#tB').value = tb;
+  showSync(DATA.sync);
+  $('#phoneBtn').hidden = !(onComputer && DATA.phone && ((DATA.phone.wifi||[]).length || (DATA.phone.tailscale||[]).length));
+  renderView(lastView);
+  if (location.hash.startsWith('#bird/')) showBird(decodeURIComponent(location.hash.slice(6)));
+}
+let polling = false;
+function showSync(s){
+  const dot = $('#syncDot'), txt = $('#syncText'), btn = $('#syncBtn'), prog = $('#prog'), ban = $('#banner');
+  dot.className = 'dot' + (s.running ? ' busy' : s.error ? ' err' : '');
+  btn.disabled = s.running;
+  if (s.running){
+    txt.textContent = s.message || 'Syncing...';
+    prog.style.width = s.total ? `${Math.round(100*s.done/s.total)}%` : '15%';
+    if (!LIST.length) ban.innerHTML = `<div class="banner">&#9203; First-time setup: downloading your Haikubox history and bird photos. This can take a few minutes; the page fills in as it goes.</div>`;
+  } else {
+    prog.style.width = '0';
+    const last = DATA?.lastSync;
+    txt.textContent = STATIC ? (last ? `Updated ${ago(last)}` : 'Waiting for first update') : s.error ? 'Sync problem' : last ? `Synced ${ago(last)}` : 'Not synced yet';
+    if (STATIC){ ban.innerHTML = s.error ? `<div class="banner err">&#9888; The last hourly update had a problem (${esc(s.error)}). Showing the most recent saved data.</div>` : ''; return; }
+    ban.innerHTML = s.error ? `<div class="banner err">&#9888; Couldn't sync: ${esc(s.error)}. Showing what's already saved. Check your internet connection, then press Sync now.</div>`
+      : (DATA?.historyNote === 'missing' ? `<div class="banner">Your Haikubox only shares recent detections, so history builds up each time this runs. For older history, drop Haikubox CSV exports into the YardBirds/imports folder.</div>` : '');
+  }
+}
+async function pollSync(){
+  if (polling) return; polling = true;
+  let lastRefresh = 0;
+  while (true){
+    let s;
+    try { s = await (await fetch('/api/sync-status', {cache:'no-store'})).json(); } catch { break; }
+    showSync(s);
+    if (!s.running){ await loadData(); break; }
+    if (Date.now() - lastRefresh > 8000 && (s.phase === 'history' || s.phase === 'photos')){ lastRefresh = Date.now(); loadData().catch(()=>{}); }
+    await new Promise(r => setTimeout(r, 1500));
+  }
+  polling = false;
+}
+$('#syncBtn').onclick = async () => { await fetch('/api/sync', {method:'POST'}); pollSync(); };
+
+['gSearch','gSort','gYear','gHidden','gSure'].forEach(id => $('#'+id).addEventListener('input', renderGuide));
+['cYear','cCompare','cMin','cSort','cSearch'].forEach(id => $('#'+id).addEventListener('input', renderCalendar));
+['tA','tB'].forEach(id => $('#'+id).addEventListener('input', renderCompare));
+
+(async function init(){
+  route();
+  try {
+    await loadData();
+    route();
+    if (DATA.sync.running) pollSync();
+  } catch (e) {
+    $('#banner').innerHTML = STATIC ? `<div class="banner err">Couldn't load the bird data. Check your connection and refresh. (If the site is brand new, the first update may still be running.)</div>` : `<div class="banner err">Can't reach the Yard Birds program. Make sure the black "Yard Birds" window is open (double-click "Open Yard Birds.bat").</div>`;
+  }
+  if (STATIC){ setInterval(() => loadData().catch(()=>{}), 15 * 60000); setInterval(() => { if (DATA?.lastSync) $('#syncText').textContent = `Updated ${ago(DATA.lastSync)}`; }, 60000); return; }
+  setInterval(() => { if (!polling) fetch('/api/sync-status').then(r=>r.json()).then(s => { if (s.running) pollSync(); else if (DATA) $('#syncText').textContent = s.error ? 'Sync problem' : `Synced ${ago(DATA.lastSync)}`; }).catch(()=>{}); }, 60000);
+})();
+</script>
+</body>
+</html>
