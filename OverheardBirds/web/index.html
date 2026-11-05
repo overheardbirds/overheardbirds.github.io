@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Yard Birds</title>
+<title>Overheard Birds</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" href="icon-192.png">
 <meta name="theme-color" content="#2f6b4f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Yard Birds">
+<meta name="apple-mobile-web-app-title" content="Overheard Birds">
 <script src="qrcode.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -244,7 +244,7 @@ label.tog{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink
   <div class="wrap hrow">
     <a class="brand" href="#today">
       <svg width="34" height="34" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="30" fill="var(--accent)"/><path d="M17 38c4-9 12-15 21-14 3-5 9-6 12-3l-5 2c1 7-3 15-12 18-6 2-12 1-16-3z" fill="var(--paper)"/><circle cx="43" cy="24" r="1.8" fill="var(--accent)"/><path d="M28 43l-3 7M33 42l-1 8" stroke="var(--paper)" stroke-width="2.4" stroke-linecap="round"/></svg>
-      <div><h1>Yard Birds</h1><small id="boxName">Haikubox</small></div>
+      <div><h1>Overheard Birds</h1><small id="boxName">Haikubox</small></div>
     </a>
     <nav id="nav">
       <a href="#today" data-v="today">Today</a>
@@ -257,7 +257,7 @@ label.tog{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink
       <span class="pill"><span class="dot" id="syncDot"></span><span id="syncText">Loading...</span></span>
       <button class="btn" id="syncBtn" title="Pull the newest detections from your Haikubox">&#8635; Sync now</button>
       <a class="btn" id="csvBtn" href="/export.csv" title="Download every daily count as a spreadsheet">&#8681; CSV</a>
-      <button class="btn" id="phoneBtn" hidden title="Open Yard Birds on your phone">&#128241; Phone</button>
+      <button class="btn" id="phoneBtn" hidden title="Open Overheard Birds on your phone">&#128241; Phone</button>
     </div>
   </div>
   <div class="progress"><i id="prog" style="width:0"></i></div>
@@ -377,7 +377,7 @@ label.tog{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink
       <div id="wrongList"></div>
     </section>
 
-    <div class="foot">Data from your Haikubox &middot; Photos and descriptions from iNaturalist contributors &amp; Wikipedia &middot; Stored on this computer in YardBirds/data/yard_birds.db</div>
+    <div class="foot">Overheard Birds &middot; Data from a Haikubox &middot; Photos and descriptions from iNaturalist contributors &amp; Wikipedia</div>
   </main>
 </div>
 
@@ -738,7 +738,7 @@ function renderCompare(){
 /* ---------- recordings & verdicts ---------- */
 function recHTML(b, limit=6){
   const recs = (DATA.recordings?.[b.name] || []).slice(0, limit);
-  if (!recs.length) return `<div class="empty">No recordings saved yet. Recordings are collected while Yard Birds is running (the Haikubox only shares the last day of clips). You can also listen in the Haikubox app.</div>`;
+  if (!recs.length) return `<div class="empty">No recordings saved yet. Recordings are collected while Overheard Birds is running (the Haikubox only shares the last day of clips). You can also listen in the Haikubox app.</div>`;
   return `<div class="recs">${recs.map(r => {
     const L = confLevel(r.conf);
     return `<div class="rec" data-ts="${esc(r.ts)}">
@@ -781,7 +781,7 @@ function renderReview(){
   const L = LIST.filter(needsReview).sort((a,b) => a.trust.lvl - b.trust.lvl || a.total - b.total || (b.last||'').localeCompare(a.last||''));
   $('#revSub').textContent = L.length ? `${L.length} bird${L.length>1?'s':''} to check` : 'All caught up';
   $('#locNote').innerHTML = DATA.nearby ? `"Reported near you" compares against iNaturalist sightings within ${DATA.nearbyRadius} km.`
-    : (STATIC ? `<b>Tip:</b> add YB_LATITUDE and YB_LONGITUDE in the GitHub repository settings and each bird will also be checked against sightings near you.` : `<b>Tip:</b> add your approximate latitude and longitude to <code>YardBirds/config.json</code> and the app will also check whether each bird is actually reported near you.`);
+    : (STATIC ? `<b>Tip:</b> add YB_LATITUDE and YB_LONGITUDE in the GitHub repository settings and each bird will also be checked against sightings near you.` : `<b>Tip:</b> add your approximate latitude and longitude to <code>OverheardBirds/config.json</code> and the app will also check whether each bird is actually reported near you.`);
   $('#deviceNote').textContent = STATIC ? 'Your answers are saved on this device (phone and computer each keep their own).' : '';
   const out = $('#reviewList'); out.innerHTML = '';
   if (!L.length) out.innerHTML = `<div class="empty">Nothing needs checking right now.</div>`;
@@ -910,7 +910,7 @@ function showPhone(){
   const main = wifi[0] || ts[0];
   const m = $('#modal');
   m.innerHTML = `<button class="x" aria-label="Close">&times;</button><div style="padding:28px 28px 30px">
-    <h2 style="font-size:28px">Yard Birds on your phone</h2>
+    <h2 style="font-size:28px">Overheard Birds on your phone</h2>
     ${main ? `
     <div class="qrbox" style="margin-top:18px">
       <div class="qr">${qrSVG(main)}</div>
@@ -928,9 +928,9 @@ function showPhone(){
     </ol>
     <h3 style="font-size:17px;margin:20px 0 4px">Good to know</h3>
     <ul class="steps">
-      <li>This computer needs to be on with the Yard Birds window open (sleep turns it off). Your phone shows "can't reach" otherwise.</li>
+      <li>This computer needs to be on with the Overheard Birds window open (sleep turns it off). Your phone shows "can't reach" otherwise.</li>
       <li>If the phone can't connect the first time, Windows Firewall probably asked a question on this computer: choose <b>Allow</b> for <b>Private networks</b>.</li>
-      <li>${ts.length ? 'Tailscale is set up, so the second address works on cellular too.' : '<b>Want it away from home?</b> Install the free <b>Tailscale</b> app on this computer and your phone and sign in to both with the same account. Restart Yard Birds and an "away from home" address appears here. It stays private, no one else can reach it.'}</li>
+      <li>${ts.length ? 'Tailscale is set up, so the second address works on cellular too.' : '<b>Want it away from home?</b> Install the free <b>Tailscale</b> app on this computer and your phone and sign in to both with the same account. Restart Overheard Birds and an "away from home" address appears here. It stays private, no one else can reach it.'}</li>
     </ul>
   </div>`;
   m.querySelector('.x').onclick = () => $('#ov').classList.remove('on');
@@ -962,7 +962,7 @@ window.addEventListener('hashchange', route);
 
 /* ---------- static (GitHub) mode: answers are saved on this device ---------- */
 const STATIC = !!window.YB_STATIC;
-const LS_KEY = 'yardbirds-reviews-v1';
+const LS_KEY = 'overheardbirds-reviews-v1';
 function loadLocal(){ try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch { return {}; } }
 let LOCAL = Object.assign({verdicts:{}, clips:{}, hidden:{}}, loadLocal());
 function saveLocal(){ try { localStorage.setItem(LS_KEY, JSON.stringify(LOCAL)); } catch {} }
@@ -993,7 +993,7 @@ function downloadCSV(){
   rows.sort((a,b) => a[0].localeCompare(b[0]) || a[1].localeCompare(b[1]));
   const q = v => /[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g,'""') + '"' : v;
   const text = [['date','common_name','scientific_name','detections'], ...rows].map(r => r.map(q).join(',')).join('\n');
-  const a = el('a', {href: URL.createObjectURL(new Blob([text], {type:'text/csv'})), download: `yard_birds_${TODAY}.csv`}); a.click();
+  const a = el('a', {href: URL.createObjectURL(new Blob([text], {type:'text/csv'})), download: `overheard_birds_${TODAY}.csv`}); a.click();
 }
 if (STATIC){
   $('#syncBtn').hidden = true;
@@ -1033,7 +1033,7 @@ function showSync(s){
     txt.textContent = STATIC ? (last ? `Updated ${ago(last)}` : 'Waiting for first update') : s.error ? 'Sync problem' : last ? `Synced ${ago(last)}` : 'Not synced yet';
     if (STATIC){ ban.innerHTML = s.error ? `<div class="banner err">&#9888; The last hourly update had a problem (${esc(s.error)}). Showing the most recent saved data.</div>` : ''; return; }
     ban.innerHTML = s.error ? `<div class="banner err">&#9888; Couldn't sync: ${esc(s.error)}. Showing what's already saved. Check your internet connection, then press Sync now.</div>`
-      : (DATA?.historyNote === 'missing' ? `<div class="banner">Your Haikubox only shares recent detections, so history builds up each time this runs. For older history, drop Haikubox CSV exports into the YardBirds/imports folder.</div>` : '');
+      : (DATA?.historyNote === 'missing' ? `<div class="banner">Your Haikubox only shares recent detections, so history builds up each time this runs. For older history, drop Haikubox CSV exports into the OverheardBirds/imports folder.</div>` : '');
   }
 }
 async function pollSync(){
@@ -1062,7 +1062,7 @@ $('#syncBtn').onclick = async () => { await fetch('/api/sync', {method:'POST'});
     route();
     if (DATA.sync.running) pollSync();
   } catch (e) {
-    $('#banner').innerHTML = STATIC ? `<div class="banner err">Couldn't load the bird data. Check your connection and refresh. (If the site is brand new, the first update may still be running.)</div>` : `<div class="banner err">Can't reach the Yard Birds program. Make sure the black "Yard Birds" window is open (double-click "Open Yard Birds.bat").</div>`;
+    $('#banner').innerHTML = STATIC ? `<div class="banner err">Couldn't load the bird data. Check your connection and refresh. (If the site is brand new, the first update may still be running.)</div>` : `<div class="banner err">Can't reach the Overheard Birds program. Make sure the black "Overheard Birds" window is open (double-click "Open Overheard Birds.bat").</div>`;
   }
   if (STATIC){ setInterval(() => loadData().catch(()=>{}), 15 * 60000); setInterval(() => { if (DATA?.lastSync) $('#syncText').textContent = `Updated ${ago(DATA.lastSync)}`; }, 60000); return; }
   setInterval(() => { if (!polling) fetch('/api/sync-status').then(r=>r.json()).then(s => { if (s.running) pollSync(); else if (DATA) $('#syncText').textContent = s.error ? 'Sync problem' : `Synced ${ago(DATA.lastSync)}`; }).catch(()=>{}); }, 60000);

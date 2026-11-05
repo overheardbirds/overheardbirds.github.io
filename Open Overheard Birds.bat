@@ -1,6 +1,6 @@
 @echo off
-title Yard Birds  (leave this window open while you use the site)
-cd /d "%~dp0YardBirds"
+title Overheard Birds  (leave this window open while you use the site)
+cd /d "%~dp0OverheardBirds"
 
 set "PY="
 where python >nul 2>nul && set "PY=python"
@@ -17,6 +17,6 @@ if not defined PY (
 %PY% birdapp.py %*
 if errorlevel 1 (
     echo.
-    echo  Yard Birds stopped with an error - see the message above.
+    echo  Overheard Birds stopped with an error - see the message above.
     pause
 )

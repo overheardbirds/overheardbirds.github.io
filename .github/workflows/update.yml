@@ -1,4 +1,4 @@
-name: Update Yard Birds
+name: Update Overheard Birds
 
 on:
   schedule:
@@ -29,11 +29,11 @@ jobs:
 
       - name: Restore saved database
         run: |
-          mkdir -p YardBirds/data
+          mkdir -p OverheardBirds/data
           if git ls-remote --exit-code --heads origin data >/dev/null 2>&1; then
             git fetch --depth=1 origin data
-            git show origin/data:yard_birds.db > YardBirds/data/yard_birds.db
-            echo "Restored database ($(du -h YardBirds/data/yard_birds.db | cut -f1))"
+            git show origin/data:birds.db > OverheardBirds/data/birds.db
+            echo "Restored database ($(du -h OverheardBirds/data/birds.db | cut -f1))"
           else
             echo "No saved database yet - first run downloads full history"
           fi
@@ -43,15 +43,15 @@ jobs:
           HAIKUBOX_SERIAL: ${{ secrets.HAIKUBOX_SERIAL }}
           YB_LATITUDE: ${{ secrets.YB_LATITUDE }}
           YB_LONGITUDE: ${{ secrets.YB_LONGITUDE }}
-        run: python YardBirds/birdapp.py --build site
+        run: python OverheardBirds/birdapp.py --build site
 
       - name: Save database to the "data" branch
         run: |
-          cd YardBirds/data
+          cd OverheardBirds/data
           git init -q -b data
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add yard_birds.db
+          git add birds.db
           git commit -q -m "Database $(date -u +%Y-%m-%dT%H:%MZ)"
           git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" data
 

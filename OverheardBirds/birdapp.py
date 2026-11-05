@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """
-Yard Birds - a local website + database for your Haikubox.
+Overheard Birds - a local website + database for your Haikubox.
 
-Double-click "Open Yard Birds.bat" (one folder up). This program:
+Double-click "Open Overheard Birds.bat" (one folder up). This program:
   1. Pulls your detection history straight from the Haikubox API
-     (no CSV exports needed) into a SQLite database: data/yard_birds.db
+     (no CSV exports needed) into a SQLite database: data/birds.db
   2. Looks up photos + a short description for every species (iNaturalist)
   3. Serves the website at http://localhost:8765 and opens your browser
   4. Re-syncs automatically every hour while the window stays open
@@ -42,7 +42,9 @@ DATA_DIR = APP_DIR / "data"
 WEB_DIR = APP_DIR / "web"
 IMPORT_DIR = APP_DIR / "imports"
 CONFIG_FILE = APP_DIR / "config.json"
-DB_FILE = DATA_DIR / "yard_birds.db"
+DB_FILE = DATA_DIR / "birds.db"
+if not DB_FILE.exists() and (DATA_DIR / "yard_birds.db").exists():
+    (DATA_DIR / "yard_birds.db").rename(DB_FILE)  # keep data from the earlier version
 
 DEFAULT_CONFIG = {
     "serial": "",
@@ -58,7 +60,7 @@ DEFAULT_CONFIG = {
 
 HAIKUBOX_API = os.environ.get("HAIKUBOX_API", "https://api.haikubox.com/haikubox")
 INAT_API = os.environ.get("INAT_API", "https://api.inaturalist.org/v1")
-USER_AGENT = "YardBirds/2.0 (personal Haikubox dashboard)"
+USER_AGENT = "OverheardBirds/2.0 (personal Haikubox dashboard)"
 
 DB_LOCK = threading.Lock()
 
@@ -924,14 +926,14 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send(200, static.read_bytes(), STATIC_TYPES[static.suffix],
                                  {"Cache-Control": "max-age=86400"})
             if path == "/api/ping":
-                return self.send(200, {"app": "yardbirds"})
+                return self.send(200, {"app": "overheardbirds"})
             if path == "/api/data":
                 return self.send(200, build_payload())
             if path == "/api/sync-status":
                 return self.send(200, SYNC.as_dict())
             if path == "/export.csv":
                 return self.send(200, export_csv(), "text/csv",
-                                 {"Content-Disposition": f'attachment; filename="yard_birds_{date.today()}.csv"'})
+                                 {"Content-Disposition": f'attachment; filename="overheard_birds_{date.today()}.csv"'})
             return self.send(404, {"error": "not found"})
         except Exception as e:
             traceback.print_exc()
@@ -975,7 +977,7 @@ class Handler(BaseHTTPRequestHandler):
 def already_running(port):
     try:
         status, data = get_json(f"http://127.0.0.1:{port}/api/ping", timeout=2, retries=0)
-        return status == 200 and (data or {}).get("app") == "yardbirds"
+        return status == 200 and (data or {}).get("app") == "overheardbirds"
     except Exception:
         return False
 
@@ -1005,6 +1007,10 @@ def build_site(out_dir):
     payload["static"] = True
     payload["phone"] = {}
     payload["box"].pop("serial", None)
+    if payload["sync"].get("error"):
+        err = payload["sync"]["error"]
+        payload["sync"]["error"] = ("couldn't reach the Haikubox" if "haikubox" in err.lower()
+                                    else "a data service didn't respond")
     (out / "data.json").write_text(json.dumps(payload, separators=(",", ":")), encoding="utf-8")
     (out / ".nojekyll").write_text("")
     log(f"Built site in {out} ({len(payload['species'])} species)")
@@ -1019,7 +1025,7 @@ def main():
         return
     port = int(CONFIG.get("port", 8765))
     if already_running(port):
-        log("Yard Birds is already running - opening it in your browser.")
+        log("Overheard Birds is already running - opening it in your browser.")
         webbrowser.open(f"http://localhost:{port}/")
         return
 
@@ -1041,7 +1047,7 @@ def main():
     SERVER_PORT = port
     url = f"http://localhost:{port}/"
     print("=" * 60)
-    print("  Yard Birds is running")
+    print("  Overheard Birds is running")
     print(f"  Open: {url}")
     urls = phone_urls()
     for u in urls.get("wifi", []):

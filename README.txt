@@ -1,8 +1,8 @@
-YARD BIRDS - your Haikubox, as a real website
+OVERHEARD BIRDS - your Haikubox, as a real website
 =============================================
 
 TO USE IT
-  Double-click  "Open Yard Birds.bat"
+  Double-click  "Open Overheard Birds.bat"
 
   - A black window opens (that's the program - leave it open).
   - Your browser opens to http://localhost:8765
@@ -31,7 +31,7 @@ WHAT'S ON THE SITE
   "CSV" (top right) downloads everything as a spreadsheet.
 
 ON YOUR PHONE
-  With Yard Birds running, click "Phone" (top right) on the computer.
+  With Overheard Birds running, click "Phone" (top right) on the computer.
   Scan the QR code with your phone's camera (phone must be on your
   home Wi-Fi). Then:
     iPhone:  Safari > Share > Add to Home Screen
@@ -44,7 +44,7 @@ ON YOUR PHONE
   Birds, and the Phone button shows a second address that works
   anywhere (private to you).
 
-  The computer must be awake with the Yard Birds window open.
+  The computer must be awake with the Overheard Birds window open.
   To stop sharing on Wi-Fi, set "phone_access": false in config.json.
 
 IS IT REALLY THAT BIRD?  (the Review tab)
@@ -61,11 +61,11 @@ IS IT REALLY THAT BIRD?  (the Review tab)
   You can also tick/cross individual recordings in any bird's page.
 
   Recordings: the Haikubox only shares the last ~24 hours of clips,
-  so Yard Birds saves them while it's running. Older clips can still
+  so Overheard Birds saves them while it's running. Older clips can still
   be played in the Haikubox app/website.
 
   "Reported near you" needs your rough location. Open
-  YardBirds/config.json in Notepad and fill in, for example:
+  OverheardBirds/config.json in Notepad and fill in, for example:
      "latitude": 43.62,
      "longitude": -116.20,
   (your town is close enough; find it by right-clicking your house on
@@ -73,22 +73,22 @@ IS IT REALLY THAT BIRD?  (the Review tab)
   nearby_radius_km (default 25).
 
 YOUR DATA
-  YardBirds/data/yard_birds.db   - the database (SQLite)
+  OverheardBirds/data/birds.db   - the database (SQLite)
   Copy that one file to back everything up.
 
-SETTINGS  (YardBirds/config.json - open with Notepad)
+SETTINGS  (OverheardBirds/config.json - open with Notepad)
   serial            your Haikubox serial number
   years_of_history  how far back to download (default 3)
   port              8765
   auto_sync_minutes 60
 
 OLDER HISTORY FROM CSV (optional)
-  If you have Haikubox CSV exports, drop them in YardBirds/imports
+  If you have Haikubox CSV exports, drop them in OverheardBirds/imports
   and press "Sync now". You never need to do this for new data.
 
 IF SOMETHING LOOKS WRONG
   The black window shows what happened. Raw samples of what the
-  Haikubox API sent are saved in YardBirds/data/api_samples.json -
+  Haikubox API sent are saved in OverheardBirds/data/api_samples.json -
   send that file along if you need help.
 
 Needs: Python 3.8 or newer (no extra packages).

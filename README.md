@@ -1,4 +1,4 @@
-# Yard Birds
+# Overheard Birds
 
 A website for my Haikubox: who's in the yard today (with photos), a field guide,
 week-by-week calendar, trends, and a review page for doubtful detections.
@@ -14,6 +14,6 @@ Settings (Settings > Secrets and variables > Actions):
 | `HAIKUBOX_SERIAL` | Haikubox serial number (required) |
 | `YB_LATITUDE`, `YB_LONGITUDE` | Rough location, for the "reported near you" check (optional) |
 
-Update by hand: Actions > Update Yard Birds > Run workflow.
+Update by hand: Actions > Update Overheard Birds > Run workflow.
 
-The same code also runs locally on Windows: double-click `Open Yard Birds.bat`.
+The same code also runs locally on Windows: double-click `Open Overheard Birds.bat`.
