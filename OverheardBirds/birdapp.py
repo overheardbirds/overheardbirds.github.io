@@ -88,8 +88,31 @@ def load_config():
 
 CONFIG = load_config()
 # Overrides used by the GitHub version (set as repository secrets)
-for _env, _key, _conv in (("HAIKUBOX_SERIAL", "serial", str), ("YB_LATITUDE", "latitude", float),
-                          ("YB_LONGITUDE", "longitude", float), ("YB_YEARS", "years_of_history", int)):
+def _coord(text, neg_letters):
+    """Accept 43.6 / 43.6° N / -116.2 / 116.2 W / '43.6, -116.2' style values."""
+    nums = re.findall(r"-?\d+(?:\.\d+)?", text)
+    if not nums:
+        raise ValueError(text)
+    v = float(nums[0])
+    if any(ch in text.upper() for ch in neg_letters) and v > 0:
+        v = -v
+    return v
+
+
+DIAG = []
+_lat_raw = os.environ.get("YB_LATITUDE", "").strip()
+_lng_raw = os.environ.get("YB_LONGITUDE", "").strip()
+if _lat_raw and not _lng_raw and len(re.findall(r"-?\d+(?:\.\d+)?", _lat_raw)) >= 2:
+    _lat_raw, _lng_raw = [x.strip() for x in re.split(r"[,;\s]+(?=[-\d])", _lat_raw, maxsplit=1)]
+DIAG.append(f"latitude secret: {'present' if _lat_raw else 'MISSING'}; longitude secret: {'present' if _lng_raw else 'MISSING'}")
+for _raw, _key, _neg in ((_lat_raw, "latitude", "S"), (_lng_raw, "longitude", "W")):
+    if _raw:
+        try:
+            CONFIG[_key] = _coord(_raw, _neg)
+            DIAG.append(f"{_key}: parsed OK")
+        except ValueError:
+            DIAG.append(f"{_key}: could not read a number from it")
+for _env, _key, _conv in (("HAIKUBOX_SERIAL", "serial", str), ("YB_YEARS", "years_of_history", int)):
     if os.environ.get(_env, "").strip():
         try:
             CONFIG[_key] = _conv(os.environ[_env].strip())
@@ -803,6 +826,10 @@ def sync_nearby():
     A bird nobody has ever photographed near you is worth double-checking."""
     loc = get_location()
     if not loc:
+        DIAG.append("nearby: skipped (no usable location)")
+        return
+    if not (-90 <= loc[0] <= 90 and -180 <= loc[1] <= 180):
+        DIAG.append("nearby: skipped (location out of range - are latitude and longitude swapped?)")
         return
     last = meta_get("nearby_synced")
     key = f"{loc[0]:.3f},{loc[1]:.3f},{CONFIG.get('nearby_radius_km', 25)},{date.today().month}"
@@ -816,9 +843,13 @@ def sync_nearby():
         while page <= 4:
             params = {"lat": loc[0], "lng": loc[1], "radius": radius, "taxon_id": 3,
                       "quality_grade": "research", "per_page": 500, "page": page, **extra}
-            status, data = get_json(f"{INAT_API}/observations/species_counts?" + urllib.parse.urlencode(params),
-                                    timeout=30, retries=1)
+            try:
+                status, data = get_json(f"{INAT_API}/observations/species_counts?" + urllib.parse.urlencode(params),
+                                        timeout=30, retries=1)
+            except Exception as e:
+                status, data = f"error {type(e).__name__}", None
             results = (data or {}).get("results", []) if status == 200 else []
+            DIAG.append(f"nearby {which} page {page}: HTTP {status}, {len(results)} species")
             for r in results:
                 t = r.get("taxon") or {}
                 sci = t.get("name")
@@ -834,7 +865,9 @@ def sync_nearby():
         time.sleep(1)
     if not found:
         log("Nearby sightings: nothing returned (check latitude/longitude in config.json)")
+        DIAG.append("nearby: nothing returned")
         return
+    DIAG.append(f"nearby: saved {len(found)} species")
     with DB_LOCK, db() as conn:
         conn.execute("DELETE FROM nearby")
         for sci, r in found.items():
@@ -1106,6 +1139,8 @@ def build_site(out_dir):
     log(f"Built site in {out} ({len(payload['species'])} species)")
     if SYNC.error:
         log(f"Note: this sync had a problem: {SYNC.error}")
+    DIAG.insert(0, f"run {datetime.now(timezone.utc).isoformat(timespec='seconds')}, sync error: {'yes' if SYNC.error else 'no'}")
+    (DATA_DIR / "last_run.txt").write_text("\n".join(DIAG) + "\n", encoding="utf-8")
 
 
 def main():
