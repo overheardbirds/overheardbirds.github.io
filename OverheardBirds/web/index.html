@@ -80,6 +80,9 @@ main{padding:28px 0 80px}
 .hello{display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap}
 .hello h2{font-size:34px;line-height:1.1}
 .hello p{margin:6px 0 0;color:var(--ink2)}
+.hsync{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.hsync small{font-size:12.5px;color:var(--ink3)}
+.tokin{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:10px;padding:10px 12px;font:14px ui-monospace,Consolas,monospace;margin:8px 0}
 .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:22px}
 .tile{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px}
 .tile .n{font-family:Fraunces,Georgia,serif;font-size:34px;font-weight:650;line-height:1.1}
@@ -272,6 +275,10 @@ label.tog{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink
         <div>
           <h2 id="hello">Good morning</h2>
           <p id="helloSub"></p>
+        </div>
+        <div class="hsync">
+          <button class="btn primary" id="homeSync">&#8635; Sync now</button>
+          <small id="homeSyncText"></small>
         </div>
       </div>
       <div class="tiles" id="tiles"></div>
@@ -556,6 +563,7 @@ function fillYearSelect(sel, withAll){
 
 /* ---------- TODAY ---------- */
 function renderToday(){
+  refreshHomeSyncText();
   const h = new Date().getHours();
   $('#hello').textContent = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
   const vis = visible();
@@ -1000,6 +1008,84 @@ if (STATIC){
   $('#csvBtn').onclick = e => { e.preventDefault(); downloadCSV(); };
 }
 
+/* ---------- home page manual sync ---------- */
+const GH_REPO = 'overheardbirds/overheardbirds.github.io';
+const GH_TOKEN_KEY = 'overheardbirds-gh-token';
+const getToken = () => { try { return localStorage.getItem(GH_TOKEN_KEY) || ''; } catch { return ''; } };
+const setToken = t => { try { t ? localStorage.setItem(GH_TOKEN_KEY, t) : localStorage.removeItem(GH_TOKEN_KEY); } catch {} };
+let homeSyncing = false;
+function homeSyncStatus(text){ $('#homeSyncText').textContent = text; }
+function refreshHomeSyncText(){
+  if (homeSyncing || !DATA) return;
+  homeSyncStatus(DATA.lastSync ? `Last updated ${ago(DATA.lastSync)}` : '');
+}
+async function homeSync(){
+  if (homeSyncing) return;
+  if (!STATIC){ await fetch('/api/sync', {method:'POST'}); pollSync(); return; }
+  const token = getToken();
+  if (!token) return showTokenSetup();
+  const btn = $('#homeSync');
+  homeSyncing = true; btn.disabled = true; homeSyncStatus('Asking GitHub to update...');
+  try {
+    const r = await fetch(`https://api.github.com/repos/${GH_REPO}/actions/workflows/update.yml/dispatches`, {
+      method: 'POST',
+      headers: {'Accept': 'application/vnd.github+json', 'Authorization': 'Bearer ' + token, 'X-GitHub-Api-Version': '2022-11-28'},
+      body: JSON.stringify({ref: 'main'})
+    });
+    if (r.status === 401 || r.status === 403 || r.status === 404){
+      homeSyncing = false; btn.disabled = false; homeSyncStatus('');
+      return showTokenSetup('That sync key didn\'t work (it may have expired). Paste a new one.');
+    }
+    if (!r.ok) throw new Error('GitHub said ' + r.status);
+  } catch (e) {
+    homeSyncing = false; btn.disabled = false; homeSyncStatus("Couldn't reach GitHub. Try again in a minute.");
+    return;
+  }
+  // wait for the new data to be published (usually 3-6 minutes)
+  const before = DATA?.lastSync || '';
+  const started = Date.now();
+  while (Date.now() - started < 20 * 60000){
+    const mins = Math.floor((Date.now() - started) / 60000);
+    homeSyncStatus(`Syncing with your Haikubox... ${mins ? mins + ' min' : 'just started'} (usually 3-6 min)`);
+    await new Promise(res => setTimeout(res, 20000));
+    try {
+      const d = await (await fetch('data.json?t=' + Date.now(), {cache: 'no-store'})).json();
+      if ((d.lastSync || '') > before){ await loadData(); break; }
+    } catch {}
+  }
+  homeSyncing = false; btn.disabled = false; refreshHomeSyncText();
+}
+function showTokenSetup(msg){
+  const m = $('#modal');
+  m.innerHTML = `<button class="x" aria-label="Close">&times;</button><div style="padding:28px">
+    <h2 style="font-size:26px;padding-right:40px">Set up Sync now (one time per device)</h2>
+    ${msg ? `<p style="color:#c0392b">${esc(msg)}</p>` : ''}
+    <p style="color:var(--ink2);font-size:14px">The site updates itself every hour. To update on demand, this device needs a GitHub "sync key" that is only allowed to start the update. It's saved on this device only.</p>
+    <ol class="steps">
+      <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">github.com/settings/personal-access-tokens/new</a> (signed in as you).</li>
+      <li>Name: <b>Overheard Birds sync</b>. Expiration: <b>1 year</b> (or longest offered).</li>
+      <li>Resource owner: <b>overheardbirds</b>. Repository access: <b>Only select repositories</b> &rarr; <b>overheardbirds.github.io</b>.</li>
+      <li>Permissions &rarr; Repository permissions &rarr; <b>Actions: Read and write</b>. Nothing else.</li>
+      <li>Click <b>Generate token</b>, copy it, and paste it here:</li>
+    </ol>
+    <input class="tokin" id="tokIn" placeholder="github_pat_..." autocomplete="off" spellcheck="false">
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn primary" id="tokSave">Save &amp; sync now</button>
+      ${getToken() ? '<button class="btn" id="tokForget">Remove saved key</button>' : ''}
+      <a class="btn" href="https://github.com/${GH_REPO}/actions/workflows/update.yml" target="_blank" rel="noopener">Or run it on GitHub instead</a>
+    </div>
+  </div>`;
+  m.querySelector('.x').onclick = () => $('#ov').classList.remove('on');
+  $('#tokSave').onclick = () => {
+    const t = $('#tokIn').value.trim();
+    if (!t) return;
+    setToken(t); $('#ov').classList.remove('on'); homeSync();
+  };
+  const f = $('#tokForget'); if (f) f.onclick = () => { setToken(''); $('#ov').classList.remove('on'); };
+  $('#ov').classList.add('on');
+}
+$('#homeSync').onclick = homeSync;
+
 /* ---------- data + sync ---------- */
 async function loadData(){
   const r = await fetch(STATIC ? 'data.json?t=' + Date.now() : '/api/data', {cache:'no-store'});
@@ -1064,7 +1150,8 @@ $('#syncBtn').onclick = async () => { await fetch('/api/sync', {method:'POST'});
   } catch (e) {
     $('#banner').innerHTML = STATIC ? `<div class="banner err">Couldn't load the bird data. Check your connection and refresh. (If the site is brand new, the first update may still be running.)</div>` : `<div class="banner err">Can't reach the Overheard Birds program. Make sure the black "Overheard Birds" window is open (double-click "Open Overheard Birds.bat").</div>`;
   }
-  if (STATIC){ setInterval(() => loadData().catch(()=>{}), 15 * 60000); setInterval(() => { if (DATA?.lastSync) $('#syncText').textContent = `Updated ${ago(DATA.lastSync)}`; }, 60000); return; }
+  refreshHomeSyncText();
+  if (STATIC){ setInterval(() => loadData().catch(()=>{}), 15 * 60000); setInterval(() => { if (DATA?.lastSync) $('#syncText').textContent = `Updated ${ago(DATA.lastSync)}`; refreshHomeSyncText(); }, 60000); return; }
   setInterval(() => { if (!polling) fetch('/api/sync-status').then(r=>r.json()).then(s => { if (s.running) pollSync(); else if (DATA) $('#syncText').textContent = s.error ? 'Sync problem' : `Synced ${ago(DATA.lastSync)}`; }).catch(()=>{}); }, 60000);
 })();
 </script>
