@@ -1,0 +1,4 @@
+run 2026-11-14T21:30:52+00:00, sync error: no
+latitude secret: present; longitude secret: present
+latitude: parsed OK
+longitude: parsed OK
